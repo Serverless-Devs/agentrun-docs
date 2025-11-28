@@ -1,0 +1,69 @@
+name: Build and Deploy to Aliyun OSS
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 拉取 Python SDK
+        run: |
+          mkdir -p sdk
+          git clone --depth 1 --branch main \
+            https://github.com/Serverless-Devs/agentrun-sdk-python.git \
+            sdk/python
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 生成 API 文档
+        run: python3 scripts/generate_api_docs.py --sdk-path sdk/python
+
+      - name: 构建静态文档
+        run: npm run build
+
+      - name: 配置 ossutil
+        run: |
+          # 下载 ossutil
+          curl -o ossutil64.zip https://gosspublic.alicdn.com/ossutil/1.7.18/ossutil-v1.7.18-linux-amd64.zip
+          unzip -j ossutil64.zip ossutil-v1.7.18-linux-amd64/ossutil64
+          chmod +x ossutil64
+          
+          # 配置 ossutil
+          ./ossutil64 config \
+            -e ${{ secrets.OSS_ENDPOINT }} \
+            -i ${{ secrets.OSS_ACCESS_KEY_ID }} \
+            -k ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+
+      - name: 部署到阿里云 OSS
+        run: ./ossutil64 cp -r build/ oss://${{ secrets.OSS_BUCKET }}/ -f
+
+      - name: 部署完成
+        run: |
+          echo "✅ 文档已成功部署到阿里云 OSS"
+          echo "🌐 访问地址: https://${{ secrets.OSS_BUCKET }}.${{ secrets.OSS_ENDPOINT }}"

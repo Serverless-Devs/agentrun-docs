@@ -1,0 +1,31 @@
+---
+sidebar_position: {{ sidebar_position }}
+title: {{ module_name }}
+---
+
+:::info 自动生成
+此文档由 `make doc-gen` 命令从 Python 源码注释自动生成。
+:::
+
+# {{ module_name }}
+
+{% if module_doc %}
+{{ module_doc | escape_mdx }}
+
+{% endif %}
+{% if classes %}
+## 类
+
+{% for cls in classes %}
+{{ render_class(cls) }}
+
+{% endfor %}
+{% endif %}
+{% if functions %}
+## 函数
+
+{% for func in functions %}
+{{ render_function(func) }}
+
+{% endfor %}
+{% endif %}

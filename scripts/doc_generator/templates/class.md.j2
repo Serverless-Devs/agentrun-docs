@@ -1,0 +1,32 @@
+## {{ item.name }}
+
+{% if item.decorators %}
+```python
+{% for dec in item.decorators %}
+{{ dec }}
+{% endfor %}
+{{ item.signature }}
+```
+{% else %}
+```python
+{{ item.signature }}
+```
+{% endif %}
+
+{{ format_docstring(item.docstring) }}
+{% set properties = item.children | selectattr("type", "equalto", "property") | list %}
+{% set methods = item.children | selectattr("type", "equalto", "method") | list %}
+{% if properties %}
+### 属性
+
+{% for prop in properties %}
+{{ render_method(prop, is_property=true) }}
+{% endfor %}
+{% endif %}
+{% if methods %}
+### 方法
+
+{% for method in methods %}
+{{ render_method(method, is_property=false) }}
+{% endfor %}
+{% endif %}

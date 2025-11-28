@@ -1,0 +1,13 @@
+{% set prefix = "📌" if is_property else "🔹" %}
+{% set display_name = "构造函数" if item.name == "__init__" else item.name %}
+#### {{ prefix }} `{{ display_name }}`
+
+{% if not is_property %}
+```python
+{{ item.signature }}
+```
+
+{% endif %}
+{{ format_docstring(item.docstring) }}
+---
+
