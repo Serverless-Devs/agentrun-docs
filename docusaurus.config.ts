@@ -48,7 +48,7 @@ const config: Config = {
               ? `https://github.com/Serverless-Devs/agentrun-sdk-python/edit/main/${args.docPath
                   .replace('api/python/', 'agentrun/')
                   .replace('.md', '.py')}`
-              : `https://github.com/Serverless-Devs/agentrun-docs/edit/main/${args.docPath}`;
+              : `https://github.com/Serverless-Devs/agentrun-docs/edit/main/docs/${args.docPath}`;
           },
         },
         blog: false,
