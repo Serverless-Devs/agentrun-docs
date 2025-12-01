@@ -8,8 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '18'
-  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
 
 jobs:
   build-and-deploy:
@@ -26,23 +25,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      - name: 设置 Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: 拉取 Python SDK
-        run: |
-          mkdir -p sdk
-          git clone --depth 1 --branch main \
-            https://github.com/Serverless-Devs/agentrun-sdk-python.git \
-            sdk/python
-
       - name: 安装依赖
         run: npm ci
-
-      - name: 生成 API 文档
-        run: python3 scripts/generate_api_docs.py --sdk-path sdk/python
 
       - name: 构建静态文档
         run: npm run build
@@ -61,9 +45,6 @@ jobs:
             -k ${{ secrets.OSS_ACCESS_KEY_SECRET }}
 
       - name: 部署到阿里云 OSS
-        run: ./ossutil64 cp -r build/ oss://${{ secrets.OSS_BUCKET }}/ -f
-
-      - name: 部署完成
         run: |
+          ./ossutil64 cp -r build/ oss://${{ secrets.OSS_BUCKET }}/ -f
           echo "✅ 文档已成功部署到阿里云 OSS"
-          echo "🌐 访问地址: https://${{ secrets.OSS_BUCKET }}.${{ secrets.OSS_ENDPOINT }}"

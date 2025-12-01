@@ -4,7 +4,14 @@
  * work well for content-centric websites.
  */
 
-@import 'tailwindcss';
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme) important;
+@import 'tailwindcss/utilities.css' layer(utilities) important;
+/* @plugin 'tailwindcss-animate'; */
+
+/* @import 'tailwindcss'; */
+/* @import 'tailwindcss/preflight'; */
+/* @tailwind utilities; */
 
 @custom-variant dark (&:is([data-theme="dark"] *));
 
@@ -20,45 +27,20 @@
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme='dark'] {
-:root {
-  --ifm-color-primary: #0241ff;
-  --ifm-color-primary-dark: #003ae7;
-  --ifm-color-primary-darker: #0036da;
-  --ifm-color-primary-darkest: #002db4;
-  --ifm-color-primary-light: #1c54ff;
-  --ifm-color-primary-lighter: #295eff;
-  --ifm-color-primary-lightest: #4f7bff;
-}
-}
-
-a,
-a:hover {
-  color: var(--ifm-color-primary);
-  cursor: pointer;
-}
-
-[data-theme='dark'] a,
-[data-theme='dark'] a:hover {
-  color: white;
-  cursor: pointer;
+:root[data-theme='dark'] {
+  --ifm-color-primary: #a7c2f3;
+  --ifm-color-primary-dark: #83a9ee;
+  --ifm-color-primary-darker: #719cec;
+  --ifm-color-primary-darkest: #3b77e4;
+  --ifm-color-primary-light: #cbdbf8;
+  --ifm-color-primary-lighter: #dde8fa;
+  --ifm-color-primary-lightest: #ffffff;
 }
 
 .index-page {
   a {
     color: white;
   }
-}
-
-img,
-svg,
-video,
-canvas,
-audio,
-iframe,
-embed,
-object {
-  display: unset;
 }
 
 .header-github-link {

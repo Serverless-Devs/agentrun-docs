@@ -70,6 +70,7 @@ const config: Config = {
       logo: {
         alt: 'AgentRun',
         src: 'img/logo.svg',
+        href: "https://www.agent.run"
       },
       items: [
         {
