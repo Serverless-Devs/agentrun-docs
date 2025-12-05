@@ -8,7 +8,7 @@ sidebar_position: 180
 
 传统做法存在诸多问题。硬编码在代码里容易泄露且难以更新，存在配置文件中同样有安全风险，每次都手动传递不仅麻烦还容易出错，让大模型处理凭证更是巨大的安全隐患。更棘手的是，当凭证需要更新时（比如 API Key 过期、权限变更），如何在不重启服务的情况下动态更新？AgentRun 的凭证管理系统就是为了解决这些问题而生。
 
-<img width="2370" height="1452" alt="image" src="https://github.com/user-attachments/assets/2b9911cc-bc80-4654-8014-7d2215ec32b2" />
+<img alt="image" src="https://github.com/user-attachments/assets/2b9911cc-bc80-4654-8014-7d2215ec32b2" />
 
 
 
@@ -17,7 +17,7 @@ AgentRun 的凭证管理分为两个维度，分别解决"谁能调用我"和"�
 
 ### 入站凭证：控制谁能访问你的 Agent
 
-<img width="1308" height="340" alt="image" src="https://github.com/user-attachments/assets/3980f178-fca3-46e8-aab0-4a6692571396" />
+<img alt="image" src="https://github.com/user-attachments/assets/3980f178-fca3-46e8-aab0-4a6692571396" />
 
 
 入站凭证用于控制外部用户或系统如何访问你的 Agent 应用。当你创建一个 Agent 并对外提供服务时，需要确保只有授权的用户才能调用。AgentRun 提供了灵活的入站凭证管理，可以为不同的调用方生成独立的凭证，设置不同的权限和配额，控制每个凭证能访问哪些 Agent、调用频率限制、有效期等。
@@ -26,14 +26,14 @@ AgentRun 的凭证管理分为两个维度，分别解决"谁能调用我"和"�
 
 ### 出站凭证：安全调用外部服务
 
-<img width="1282" height="316" alt="image" src="https://github.com/user-attachments/assets/cb7cf6ee-53b3-400b-95b7-a2217968e455" />
+<img alt="image" src="https://github.com/user-attachments/assets/cb7cf6ee-53b3-400b-95b7-a2217968e455" />
 
 
 出站凭证用于 Agent 访问外部服务时的身份认证。Agent 应用通常需要调用各种外部服务：大模型 API（OpenAI、Claude、Qwen 等）、数据库、第三方工具、企业内部系统等，每个服务都需要相应的凭证。传统方式下，开发者要么把这些凭证硬编码在代码里，要么通过环境变量传递，不仅不安全，更新时还需要重启服务。
 
 Ag**entRun 采用了一套巧妙的定时查询与缓存机制来管理出站凭证。**所有出站凭证统一存储在加密的凭证库中，代码里不再出现任何敏感信息。Agent 启动时会从凭证库拉取所需的所有凭证并缓存到本地，运行过程中直接使用本地缓存，避免频繁的网络请求带来的性能开销。同时，系统会定期进行健康检查，主动查询凭证是否有更新，发现变更时只更新发生变化的凭证。如果健康检查失败，会自动重试，确保凭证始终可用。
 
-<img width="1374" height="602" alt="image" src="https://github.com/user-attachments/assets/08bb16da-6a23-4133-bb74-6f3a98fc5070" />
+<img alt="image" src="https://github.com/user-attachments/assets/08bb16da-6a23-4133-bb74-6f3a98fc5070" />
 
 
 **这种定时查询方案带来了多重价值。**从性能角度看，本地缓存避免了每次调用都查询凭证库，大幅降低了延迟和网络开销；从可用性角度看，即使凭证服务短暂不可用，缓存的凭证仍然可用，不会影响 Agent 的正常运行；从安全性角度看，定时健康检查确保凭证泄露或过期时能在几分钟内完成更新，而不需要等到下次部署。**最关键的是，整个更新过程对 Agent 代码完全透明，开发者无需编写任何凭证更新逻辑，专注于业务实现即可。**
