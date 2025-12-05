@@ -151,7 +151,10 @@ const config: Config = {
     },
   } satisfies Preset.ThemeConfig,
 
-  plugins: ['./src/plugins/tailwind-config.js'],
+  plugins: [
+    './src/plugins/tailwind-config.js',
+    './src/plugins/webpack-cache-config.js',
+  ],
 };
 
 export default config;
