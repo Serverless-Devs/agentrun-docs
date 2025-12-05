@@ -94,10 +94,10 @@ curl 127.0.0.1:9000/openai/v1/chat/completions \
 
 > 您可以点击此[快速授权链接](https://ram.console.aliyun.com/authorize?request=%7B%22template%22%3A%22OldRoleCommonAuthorize%22%2C%22referrer%22%3A%22https%3A%2F%2Ffunctionai.console.aliyun.com%2Fcn-hangzhou%2Fexplore%22%2C%22payloads%22%3A%5B%7B%22missionId%22%3A%22OldRoleCommonAuthorize.FC%22%2C%22roleName%22%3A%22agentRunRole%22%2C%22roleDescription%22%3A%22AgentRun%20auto%20created%20role.%22%2C%22rolePolicies%22%3A%5B%7B%22policyName%22%3A%22AliyunAgentRunFullAccess%22%7D%2C%7B%22policyName%22%3A%22AliyunDevsFullAccess%22%7D%5D%7D%5D%2C%22callback%22%3A%22https%3A%2F%2Ffunctionai.console.aliyun.com%22%7D)，创建一个符合相关权限的角色agentRunRole。
 > 
-> 此快速创建角色的RoleArn为：acs:ram::{您的阿里云主账号 ID}:role/agentRunRole
+> 此快速创建角色的RoleArn为：acs:ram::\{您的阿里云主账号 ID\}:role/agentRunRole
 
 ```yaml
-role: acs:ram::{您的阿里云主账号 ID}:role/{您的阿里云角色名称}
+role: acs:ram::\{您的阿里云主账号 ID\}:role/\{您的阿里云角色名称\}
 ```
 
 > 如果在未来的使用中遇到了任何 Serverless Devs 相关问题，都可以参考 [Serverless Devs 相关文档](https://serverless-devs.com/docs/overview)
