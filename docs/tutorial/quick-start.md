@@ -80,7 +80,7 @@ AgentRunServer(invoke_agent=invoke_agent).start()
 ## 5. 调用 Agent
 
 ```bash
-curl 127.0.0.1:9000/v1/chat/completions \
+curl 127.0.0.1:9000/openai/v1/chat/completions \
   -XPOST \
   -H "content-type: application/json" \
   -d '{"messages": [{"role": "user", "content": "通过代码查询现在是几点?"}], "stream":true}'
@@ -90,7 +90,11 @@ curl 127.0.0.1:9000/v1/chat/completions \
 
 项目中已经存在 `s.yaml` 文件，这是 Serverless Devs 的部署配置文件，通过这个文件，您可以配置当前 Agent 在 Agent Run 上的名称、CPU/内存规格、日志投递信息
 
-在示例情况下，您只需要简单修改该文件即可。修改 `role` 字段为拥有 AgentRun Full Access 的角色（如果您拥有精细化权限控制的需求，可以根据实际使用的 API 收敛权限）
+在示例情况下，您只需要简单修改该文件即可。修改 `role` 字段为授信给阿里云函数计算（FC）服务，需要拥有AliyunAgentRunFullAccess权限的角色（如果您拥有精细化权限控制的需求，可以根据实际使用的 API 收敛权限）
+
+> 您可以点击此[快速授权链接](https://ram.console.aliyun.com/authorize?request=%7B%22template%22%3A%22OldRoleCommonAuthorize%22%2C%22referrer%22%3A%22https%3A%2F%2Ffunctionai.console.aliyun.com%2Fcn-hangzhou%2Fexplore%22%2C%22payloads%22%3A%5B%7B%22missionId%22%3A%22OldRoleCommonAuthorize.FC%22%2C%22roleName%22%3A%22agentRunRole%22%2C%22roleDescription%22%3A%22AgentRun%20auto%20created%20role.%22%2C%22rolePolicies%22%3A%5B%7B%22policyName%22%3A%22AliyunAgentRunFullAccess%22%7D%2C%7B%22policyName%22%3A%22AliyunDevsFullAccess%22%7D%5D%7D%5D%2C%22callback%22%3A%22https%3A%2F%2Ffunctionai.console.aliyun.com%22%7D)，创建一个符合相关权限的角色agentRunRole。
+> 
+> 此快速创建角色的RoleArn为：acs:ram::{您的阿里云主账号 ID}:role/agentRunRole
 
 ```yaml
 role: acs:ram::{您的阿里云主账号 ID}:role/{您的阿里云角色名称}
@@ -100,9 +104,13 @@ role: acs:ram::{您的阿里云主账号 ID}:role/{您的阿里云角色名称}
 
 在部署前，您需要配置您的部署密钥，使用 `s config add` 进入交互式密钥管理，并按照引导录入您在阿里云的 Access Key ID 与 Access Key Secret。在录入过程中，您需要短期记忆一下您输入的密钥对名称（假设为 `agentrun-deploy`）
 
-配置完成后，即可执行部署
+配置完成后，需要首先执行`s build`构建，该步骤依赖本地的`docker`服务，对代码目录下的`requirements.txt`进行构建，以便部署在云端。
+
+随后即可执行`s deploy`进行部署操作。
+
 
 ```bash
+s build
 s deploy -a agentrun-deploy
 # agentrun-deploy 是您使用的密钥对名称，也可以将该名称写入到 s.yaml 开头的 access: 字段中
 ```
@@ -123,7 +131,7 @@ endpoints:
 此处的 url 为您的 Agent 调用地址，将实际的请求 path 拼接到该 base url 后，即可调用云上的 Agent 资源
 
 ```bash
-curl https://12345.agentrun-data.cn-hangzhou.aliyuncs.com/agent-runtimes/abcd/endpoints/prod/invocations/v1/chat/completions \
+curl https://12345.agentrun-data.cn-hangzhou.aliyuncs.com/agent-runtimes/abcd/endpoints/prod/invocations/openai/v1/chat/completions \
   -XPOST \
   -H "content-type: application/json" \
   -d '{"messages": [{"role": "user", "content": "通过代码查询现在是几点?"}], "stream":true}'
