@@ -11,7 +11,7 @@ AgentRun 给出了答案：**通过无代码快速创建 Agent 验证想法，�
 ## 从想法到上线：60秒创建你的第一个 Agent
 很多时候，最了解业务需求的是业务人员而不是技术人员，但传统的 Agent 开发需要编写大量代码，业务人员无法直接参与。**AgentRun 的无代码创建能力打破了这个限制。**
 
-<img width="2476" height="1416" alt="image" src="https://github.com/user-attachments/assets/75d3006a-d1e7-4c90-b4cb-2e2dc41dc4c3" />
+<img alt="image" src="https://github.com/user-attachments/assets/75d3006a-d1e7-4c90-b4cb-2e2dc41dc4c3" />
 
 
 如图，创建一个 Agent 只需要三四个步骤：
@@ -54,7 +54,7 @@ graph LR
 平台还支持**版本管理和灰度发布**，你可以安全地测试新版本，确认没问题后再全量发布。
 
 > 除了快速创建，你还可以进行在线测试，并且可以进行多模型测试：  
-<img width="2008" height="1282" alt="image" src="https://github.com/user-attachments/assets/88008728-b373-4c69-a9bb-1049c67a8c89" />
+<img alt="image" src="https://github.com/user-attachments/assets/88008728-b373-4c69-a9bb-1049c67a8c89" />
 >
 
 ## 业务发展，Agent 也要进化
@@ -67,7 +67,7 @@ graph LR
 
 **这时候，你需要的是代码级别的控制能力。**传统的低代码平台到了这一步就束手无策，你要么忍受功能受限，要么推倒重来用高代码重写整个 Agent。但 AgentRun 提供了第三条路：**一键转换为高代码。**
 
-<img width="2266" height="1306" alt="image" src="https://github.com/user-attachments/assets/aea1d2da-b552-42c1-b66d-de46f31dfc39" />
+<img alt="image" src="https://github.com/user-attachments/assets/aea1d2da-b552-42c1-b66d-de46f31dfc39" />
 
 
 如图所示，转换过程非常简单：
@@ -77,7 +77,7 @@ graph LR
 3. 代码结构清晰，包含完整的注释，易于理解和修改
 4. 你可以选择在 AgentRun 的在线 IDE 中直接编辑，也可以下载到本地使用你喜欢的开发工具
 
-<img width="3024" height="1720" alt="image" src="https://github.com/user-attachments/assets/14541d7d-6118-4691-9786-dd745bfae866" />
+<img alt="image" src="https://github.com/user-attachments/assets/14541d7d-6118-4691-9786-dd745bfae866" />
 
 
 **转换后的代码不是"垃圾代码"**，而是遵循最佳实践、结构清晰的高质量代码。它保留了你之前所有的配置（模型选择、Prompt、工具配置），并将它们转换为规范的代码结构。
@@ -129,7 +129,7 @@ graph TB
 对于耗时较长的操作，比如复杂数据分析、大文件处理，可以使用 AgentRun 的异步调用能力。Agent 不必阻塞等待，可以继续处理其他请求，当异步任务完成后通过回调通知结果。这种能力在构建高并发、高性能的 Agent 应用时尤为重要。
 
 ## 真实案例：FunctionQ 的演进之路
-<img width="3024" height="1710" alt="image" src="https://github.com/user-attachments/assets/5068c3e9-426c-4682-bb3e-44265ad0db59" />
+<img alt="image" src="https://github.com/user-attachments/assets/5068c3e9-426c-4682-bb3e-44265ad0db59" />
 
 
 让我们回到第一篇文章提到的 FunctionQ 案例。这个函数计算智能助手的开发过程，诠释了从无代码到高代码的演进价值。
