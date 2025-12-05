@@ -25,8 +25,6 @@ browsertool:
 
 ### 3.1 基于代码解释器扩展
 
-假设您需要添加数据科学相关的工具包：
-
 ```dockerfile
 # Dockerfile
 FROM serverless-registry.cn-hangzhou.cr.aliyuncs.com/functionai/sandbox-code_interpreter_dev:v0.3.2
@@ -43,13 +41,11 @@ RUN apt-get update && apt-get install -y \
     libgomp1 \  # 某些科学计算库需要
     && rm -rf /var/lib/apt/lists/*
 
-# 添加您的自定义代码（可选）
-COPY my_utils/ /app/my_utils/
+# 添加自定义代码（推荐放在用户目录）
+COPY --chown=user:user my_utils/ /home/user/my_utils/
 ```
 
 ### 3.2 基于浏览器工具扩展
-
-假设您需要添加网页自动化相关的工具：
 
 ```dockerfile
 # Dockerfile
@@ -66,6 +62,9 @@ RUN pip install --no-cache-dir \
     beautifulsoup4 \
     scrapy \
     selenium
+
+# 添加自定义脚本（推荐放在用户目录）
+COPY --chown=user:user scripts/ /home/user/scripts/
 ```
 
 ## 四、关键注意事项
@@ -74,10 +73,8 @@ RUN pip install --no-cache-dir \
 
 ```yaml
 保留项:
-  目录结构:
-    - /app/handler.py      # 主处理器
-    - /app/api/            # API 接口
-    - /app/config/         # 配置文件
+  系统核心文件:
+    - /app/* 目录下的所有文件（系统保留，用户无写权限）
   
   环境变量:
     - FC_* 开头的所有变量
@@ -86,13 +83,17 @@ RUN pip install --no-cache-dir \
   启动命令:
     - 不要覆盖 ENTRYPOINT
     - 不要修改 CMD
+  
+  服务端口:
+    - code-interpreter: 5000
+    - browser: 3000
 ```
 
 ### 可以安全添加的内容
 
 - 新的 Python/Node.js 依赖包
 - 系统工具和库
-- 自定义目录（避开 `/app/api`、`/app/config`）
+- 自定义文件（放在 `/home/user/` 目录下）
 - 新的环境变量（使用自己的前缀）
 
 ## 五、构建和测试
@@ -109,17 +110,28 @@ docker history my-custom-sandbox:latest
 
 ### 5.2 本地测试
 
+对于代码解释器镜像：
 ```bash
 # 运行容器
 docker run -d \
-  --name test-sandbox \
-  -p 9000:9000 \
+  --name test-code-interpreter \
+  -p 5000:5000 \
   my-custom-sandbox:latest
 
-# 测试基础功能是否正常
-curl http://localhost:9000/health
+# 测试基础功能
+curl http://localhost:5000/health
+```
 
-# 如果返回 200 状态码，说明核心功能正常
+对于浏览器工具镜像：
+```bash
+# 运行容器
+docker run -d \
+  --name test-browser \
+  -p 3000:3000 \
+  my-custom-sandbox:latest
+
+# 测试基础功能
+curl http://localhost:3000/health
 ```
 
 ### 5.3 简单验证脚本
@@ -128,8 +140,12 @@ curl http://localhost:9000/health
 # test.py
 import requests
 
-# 测试核心 API 是否正常
-response = requests.get("http://localhost:9000/health")
+# 根据镜像类型选择端口
+# code-interpreter 使用 5000
+# browser 使用 3000
+port = 5000  # 或 3000
+
+response = requests.get(f"http://localhost:{port}/health")
 if response.status_code == 200:
     print("核心功能正常")
 else:
@@ -155,11 +171,15 @@ docker push registry.cn-hangzhou.aliyuncs.com/<您的命名空间>/custom-sandbo
 ### 6.2 在 AgentRun 中使用
 
 在 AgentRun 平台创建 Sandbox 时：
-1. 选择 "自定义镜像" 选项
-2. 填入您的镜像地址：`registry.cn-hangzhou.aliyuncs.com/<您的命名空间>/custom-sandbox:v1.0`
-3. 完成创建
 
+- 选择 "自定义镜像" 选项
+- 
 <img alt="image" src="https://github.com/user-attachments/assets/3fe1a326-5aac-48bc-a899-54cca53f3257" />
+
+- 选择镜像地址和标签
+- 
+- 完成创建
+
 
 
 ## 七、实际案例
@@ -175,6 +195,9 @@ RUN pip install --no-cache-dir \
     ta-lib \             # 技术分析
     quantlib \           # 量化金融
     pandas-datareader    # 数据读取
+
+# 添加自定义分析脚本
+COPY --chown=user:user finance_tools/ /home/user/finance_tools/
 ```
 
 ### 案例2：机器学习开发环境
@@ -188,6 +211,10 @@ RUN pip install --no-cache-dir \
     transformers==4.30.0 \
     langchain==0.0.200 \
     openai==1.0.0
+
+# 添加模型文件和工具
+COPY --chown=user:user models/ /home/user/models/
+COPY --chown=user:user ml_utils/ /home/user/ml_utils/
 ```
 
 ### 案例3：Web自动化测试环境
@@ -206,22 +233,25 @@ RUN apt-get update && apt-get install -y \
     fonts-wqy-microhei \
     fonts-wqy-zenhei \
     && rm -rf /var/lib/apt/lists/*
+
+# 添加测试脚本
+COPY --chown=user:user test_suites/ /home/user/test_suites/
 ```
 
 ## 八、常见问题
 
-**Q: 为什么不能从头构建镜像？**  
-A: 官方镜像包含与 AgentRun 平台通信的专有接口和配置，从头构建会丢失这些关键组件。
+**Q: 为什么自定义文件要放在 /home/user 目录？**  
+A: /app 目录是系统保留目录，用户没有写权限。/home/user 是用户工作目录，有完整的读写权限。
 
-**Q: 如何知道是否破坏了核心功能？**  
-A: 运行容器后，如果 `/health` 接口返回非 200 状态码，说明核心功能被破坏。
+**Q: 为什么端口不是 9000？**  
+A: AgentRun 平台对不同类型的 Sandbox 有固定的端口要求：code-interpreter 使用 5000，browser 使用 3000。
+
+**Q: 如何在运行时访问自定义文件？**  
+A: 直接使用相对路径或绝对路径访问，例如 `/home/user/my_utils/tool.py` 或在代码中使用 `~/my_utils/tool.py`。
 
 **Q: 可以修改 Python 版本吗？**  
 A: 不建议。修改 Python 版本可能导致核心依赖不兼容。
 
-**Q: 镜像太大怎么办？**  
-A: 1) 使用 `--no-cache-dir` 安装包  2) 清理 apt 缓存  3) 使用多阶段构建
-
 ---
 
-**核心要点**：基于官方镜像扩展，只添加不修改，测试验证后推送 ACR，在 AgentRun 选择自定义镜像即可使用。
+**核心要点**：基于官方镜像扩展，自定义内容放在 /home/user 目录，使用正确的端口，测试验证后推送 ACR，在 AgentRun 选择自定义镜像即可使用。
