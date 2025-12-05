@@ -297,7 +297,7 @@ graph TB
 
 ### 方式一：从工具市场直接使用
 
-<img width="3024" height="1714" alt="image" src="https://github.com/user-attachments/assets/4cca00ca-6eff-4baa-88fc-2f074d68f206" />
+<img alt="image" src="https://github.com/user-attachments/assets/4cca00ca-6eff-4baa-88fc-2f074d68f206" />
 
 
 AgentRun 提供了工具市场，包含大量预制的 MCP 工具，涵盖代码执行、浏览器自动化、数据库查询、云服务操作等常见场景。**用户可以直接搜索、预览、一键添加**，无需从零配置。工具市场中的 MCP 都经过测试优化，包含完善的描述和示例。
@@ -306,7 +306,7 @@ AgentRun 提供了工具市场，包含大量预制的 MCP 工具，涵盖代码
 
 ### 方式二：导入已有 MCP 并通过代理增强
 
-<img width="2158" height="1378" alt="image" src="https://github.com/user-attachments/assets/08a5f81b-8f9e-45a2-b927-29a08bff1315" />
+<img alt="image" src="https://github.com/user-attachments/assets/08a5f81b-8f9e-45a2-b927-29a08bff1315" />
 
 
 如果你已经有现成的 MCP 工具（开源社区的、第三方的、自己开发的），可以通过 **MCP 代理**导入到 AgentRun。
@@ -321,7 +321,7 @@ AgentRun 提供了工具市场，包含大量预制的 MCP 工具，涵盖代码
 
 ### 方式三：多个 API 打包成 MCP
 
-<img width="2104" height="1312" alt="image" src="https://github.com/user-attachments/assets/ff26ca21-7d1a-42b4-a506-3707fcbc0292" />
+<img alt="image" src="https://github.com/user-attachments/assets/ff26ca21-7d1a-42b4-a506-3707fcbc0292" />
 
 
 AgentRun 支持**将多个相关的 API 打包成一个 MCP 工具**。比如云服务的多个 API：`ListFunctions`、`GetFunction`、`InvokeFunction`、`GetLogs`，可以打包成一个 `cloud-functions-mcp`。
