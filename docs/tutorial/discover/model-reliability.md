@@ -13,7 +13,7 @@ AgentRun 通过完整的模型管理和治理能力，系统性地解决了这�
 ## 从混乱到有序：统一的模型管理
 在没有统一管理之前，开发者面临的是这样的困境：不同的模型分散在各处，有的在代码里硬编码，有的在配置文件中，有的是环境变量。想要切换一个模型？需要改代码、测试、重新部署。想知道用了哪些模型、每个模型的调用量和成本？只能从账单倒推。
 
-<img width="2364" height="1312" alt="image" src="https://github.com/user-attachments/assets/ecc43765-c719-4948-bf03-683495d3d384" />
+<img alt="image" src="https://github.com/user-attachments/assets/ecc43765-c719-4948-bf03-683495d3d384" />
 
 
 如图所示，**AgentRun 提供了统一的模型管理界面**。所有接入的模型都在这里集中展示和管理，你可以清楚地看到每个模型的状态、配置、使用情况。需要调整某个模型的配置？直接在界面修改，立即生效，无需重启服务。需要查看某个模型的调用量和成本？所有数据一目了然。
@@ -23,14 +23,14 @@ AgentRun 通过完整的模型管理和治理能力，系统性地解决了这�
 ## 接入灵活：支持所有主流模型
 如图所示，AgentRun 在模型接入方面提供了极大的灵活性。
 
-<img width="1838" height="848" alt="image" src="https://github.com/user-attachments/assets/b95bc3c5-dc1b-4864-8092-405408b07dd1" />
+<img alt="image" src="https://github.com/user-attachments/assets/b95bc3c5-dc1b-4864-8092-405408b07dd1" />
 
 
 当你需要接入一个新模型时，可以通过搜索功能快速找到你想要的模型供应商——OpenAI、Anthropic、阿里云百炼、Minimax、智谱 AI 等主流供应商都已经内置支持。选择供应商后，可以看到该供应商提供的所有模型列表，选择你需要的模型，填入 API Key 等必要信息，就完成了接入。
 
 但更强大的是**自定义创建能力**。如果你使用的是企业自建的私有模型，或者是 AgentRun 尚未内置支持的模型服务，可以通过自定义创建的方式接入。
 
-<img width="1392" height="874" alt="image" src="https://github.com/user-attachments/assets/84cbeb87-2271-44da-85c1-32d0b7ab9db0" />
+<img alt="image" src="https://github.com/user-attachments/assets/84cbeb87-2271-44da-85c1-32d0b7ab9db0" />
 
 
 只需要提供模型的 API 地址、鉴权方式、请求格式等信息，AgentRun 就能将其纳入统一管理。这种开放性确保了平台不会成为你的技术限制，而是真正成为你的技术赋能。
@@ -63,7 +63,7 @@ graph TB
 ## 模型治理：从单点到高可用
 接入模型只是第一步，**如何确保模型调用的稳定性和可靠性，才是生产环境的核心需求。**这就是模型治理能力的价值所在。
 
-<img width="2030" height="878" alt="image" src="https://github.com/user-attachments/assets/0b21eafb-82d0-42e1-a8fe-440de0dfa225" />
+<img alt="image" src="https://github.com/user-attachments/assets/0b21eafb-82d0-42e1-a8fe-440de0dfa225" />
 
 
 如图所示，AgentRun 提供了强大的模型治理能力，底层基于开源项目 LiteLLM 构建，并**无感部署在函数计算上**。这意味着你无需关心 LiteLLM 的部署、运维、扩缩容等问题，平台已经帮你处理好了一切。
@@ -109,7 +109,7 @@ AgentRun 的模型治理能力设计得很巧妙，**它既能满足普通用户
 
 **第三个问题**是成本问题。所有查询都使用 GPT-4，但实际上 80% 的查询都是简单问题（查订单、查物流），根本不需要 GPT-4 的能力。成本居高不下，但不知道如何优化。
 
-<img width="2764" height="990" alt="image" src="https://github.com/user-attachments/assets/686006e6-3d32-4c6c-b168-71f937c80b0c" />
+<img alt="image" src="https://github.com/user-attachments/assets/686006e6-3d32-4c6c-b168-71f937c80b0c" />
 
 
 **引入 AgentRun 的模型治理后，这些问题都得到了解决。**团队配置了完整的模型治理策略：主模型是 GPT-4，备用模型是 Claude-3 和 Qwen-Max。当 GPT-4 出现故障时，系统会在毫秒级自动切换到备用模型，整个过程对用户透明。配置了基于语义的智能路由，简单查询自动使用 GPT-3.5-turbo，复杂问题才使用 GPT-4，成本降低了约 50%，用户体验没有明显变化。设置了限流和告警策略，当接近限额时自动降低调用频率并通知团队，避免触发硬限流。
