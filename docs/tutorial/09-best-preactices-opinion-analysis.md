@@ -6,6 +6,8 @@ sidebar_position: 19
 
 本章通过一个完整的舆情分析系统案例，展示 AgentRun SDK 在实际项目中的应用。该系统实现了从数据收集、深度分析到报告生成的完整流程，并提供了流式输出、多沙箱管理、智能探索等高级特性。
 
+> 目前该代码已经发布到 Serverless Registry，可以通过 Serverless Devs 工具进行下载：`s init opinion_analysis`
+
 ## 系统概述
 
 这个舆情分析系统的核心目标是自动化地监测和分析网络舆情。系统接收用户提供的关键词，自动在多个平台搜索相关信息，使用浏览器沙箱深度抓取内容，通过 AI 进行情感分析和趋势预测，最终生成专业的可视化报告。整个过程通过 Server-Sent Events 实时推送状态更新，让用户可以实时观察分析进展。
@@ -368,3 +370,29 @@ results = await asyncio.gather(*tasks, return_exceptions=True)
 关键经验包括：使用明确的工具序列而不是让 LLM 自由决策，实现完善的错误检测和自动恢复，通过流式输出保持与用户的实时交互，建立多层次的数据质量控制体系。这些实践不仅适用于舆情分析，也可以推广到其他需要 Agent 进行复杂任务处理的场景。
 
 在实际部署时，还需要考虑更多工程因素：日志和监控的完善性、成本控制、并发限制、数据存储、用户权限管理等。但核心的架构设计和最佳实践已经在这个案例中得到充分体现，可以作为构建类似系统的参考基础。
+
+------
+
+为了便于大家进行快速体验，可以通过 AgentRun 控制台探索页面进行快速体验
+
+- 访问[https://functionai.console.aliyun.com/cn-hangzhou/agent/explore](AgentRun 探索页面): 
+
+<img src="https://github.com/user-attachments/assets/35bbef8c-0863-47f4-8e68-f2d6972a7ac2" />
+
+- 按照要求，填写模型和沙箱信息：
+
+<img src="https://github.com/user-attachments/assets/0e875d1c-eb1c-46b2-965e-2905415fecf2" />
+
+- 进行 Agent 创建：
+
+<img src="https://github.com/user-attachments/assets/7bde3b80-1440-4793-a1e7-24521dd26447" />
+
+- 访问创建后的 Agent 进行体验
+
+<img src="https://github.com/user-attachments/assets/e581288b-a6dd-4b1b-9385-3d96b2eb4d73" />
+
+<img src="https://github.com/user-attachments/assets/ad041c87-f1ba-492f-a23c-ae207d22e905" />
+
+<img src="https://github.com/user-attachments/assets/7c57170e-9bbd-43be-b6b5-11ae14a07a18" />
+
+
