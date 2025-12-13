@@ -2,137 +2,231 @@
 sidebar_position: 2
 ---
 
-# 🚀 快速开始
+# 快速开始
 
-你可以使用任意您喜欢的框架进行 Agent 开发，这里以 langchain 为例
+这是一个端到端的实践指南，将带您在 15 分钟内完成一个智能体的开发和部署。我们会使用 LangChain 框架构建一个支持代码执行能力的对话智能体，并将其部署到 AgentRun 云平台供业务系统调用。
 
-## 1. 安装 Serverless Devs
+## 前置准备
 
-运行脚手架，您需要使用 Serverless Devs 工具，请参考对应 [安装教程](https://serverless-devs.com/docs/user-guide/install)
-
-> 如果您拥有 NodeJS 开发环境，可以使用 `npm i -g @serverless-devs/s` 快速安装 Serverless Devs
-> 您也可以直接下载 [Serverless Devs 二进制程序](https://github.com/Serverless-Devs/Serverless-Devs/releases) 使用 Serverless Devs
-
-## 2. 创建模板
-
-使用快速创建脚手架创建您的 Agent
-
-:::warning
-您需要确保您的 python 环境在 3.10 以上
-:::
+在开始之前，请确保您的开发环境满足以下要求。首先需要安装 Serverless Devs 工具，这是 AgentRun 使用的项目脚手架和部署工具。如果您的本地环境已经安装了 NodeJS，可以通过 npm 快速完成安装：
 
 ```bash
-# 初始化模板
+npm install -g @serverless-devs/s
+```
+
+如果您不希望安装 NodeJS 环境，也可以直接下载 [Serverless Devs 二进制程序](https://github.com/Serverless-Devs/Serverless-Devs/releases)使用。安装完成后，执行 `s --version` 验证安装是否成功。
+
+另外，请确认您的 Python 版本在 3.10 或以上，这是 AgentRun SDK 的运行要求。可以通过 `python --version` 查看当前版本。
+
+## 创建项目
+
+使用 Serverless Devs 的初始化命令创建一个基于 LangChain 的智能体项目。执行以下命令并按照提示完成项目创建：
+
+```bash
 s init agentrun-quick-start-langchain
+```
 
-# 按照实际情况进入代码目录
+命令执行后会在当前目录生成 `agentrun-quick-start-langchain` 文件夹，这是一个完整的 Agent 项目模板。进入代码目录并安装依赖：
+
+```bash
 cd agentrun-quick-start-langchain/code
-
-# 初始化虚拟环境并安装依赖
 uv venv && uv pip install -r requirements.txt
 ```
 
-## 3. 配置认证信息
+项目使用 uv 作为 Python 包管理器以提供更快的依赖安装速度。如果您更习惯使用 pip，可以替换为 `python -m venv .venv && pip install -r requirements.txt`。
 
-设置环境变量（建议通过 `.env` 配置您的环境变量）
+## 配置认证信息
+
+AgentRun SDK 需要您的阿里云账号凭证来访问云端资源。推荐通过环境变量的方式配置认证信息，这样可以避免在代码中硬编码敏感信息。在项目根目录创建 `.env` 文件：
 
 ```bash
-export AGENTRUN_ACCESS_KEY_ID="your-access-key-id"
-export AGENTRUN_ACCESS_KEY_SECRET="your-access-key-secret"
-export AGENTRUN_ACCOUNT_ID="your-account-id"
-export AGENTRUN_REGION="cn-hangzhou"
+AGENTRUN_ACCESS_KEY_ID=your-access-key-id
+AGENTRUN_ACCESS_KEY_SECRET=your-access-key-secret
+AGENTRUN_ACCOUNT_ID=your-account-id
+AGENTRUN_REGION=cn-hangzhou
 ```
 
-## 4. 了解 Agent 如何与 LangChain 集成
+将上述配置项中的值替换为您的真实凭证。其中 `AGENTRUN_ACCESS_KEY_ID` 和 `AGENTRUN_ACCESS_KEY_SECRET` 可以在阿里云控制台的 [AccessKey 管理页面](https://ram.console.aliyun.com/manage/ak)获取，`AGENTRUN_ACCOUNT_ID` 是您的阿里云主账号 ID。
 
-使用 `from agentrun.integration.langchain import model, sandbox_toolset` 导入 langchain 的集成能力，这里默认提供了 `model`、`sandbox_toolset`、`toolset`，可以快速创建 langchain 可识别的大模型、工具
-同时，通过 AgentRunServer 可以快速开放 HTTP Server 供其他业务集成
+配置完成后，AgentRun SDK 会在初始化时自动读取这些环境变量。如果您希望通过代码显式配置，也可以使用 Config 对象：
+
+```python
+from agentrun.utils.config import Config
+
+config = Config(
+    access_key_id="your-access-key-id",
+    access_key_secret="your-access-key-secret",
+    account_id="your-account-id",
+    region_id="cn-hangzhou"
+)
+```
+
+## 理解 Agent 代码结构
+
+打开项目中的 `index.py` 文件，这是智能体的核心实现。代码主要分为三个部分：资源初始化、智能体逻辑和服务启动。
+
+首先是资源初始化部分，这里通过 AgentRun 的集成模块获取 LangChain 可用的模型和工具：
 
 ```python
 from agentrun.integration.langchain import model, sandbox_toolset
 from agentrun.sandbox import TemplateType
-from agentrun.server import AgentRequest, AgentRunServer
-from agentrun.utils.log import logger
 
-# 请替换为您已经创建的 模型 和 沙箱 名称
-MODEL_NAME = "<your-model-name>"
-SANDBOX_NAME = "<your-sandbox-name>"
+# 指定要使用的模型名称（需要提前在控制台创建）
+MODEL_NAME = "your-model-name"
+# 指定沙箱模板名称（用于执行代码）
+SANDBOX_NAME = "your-sandbox-name"
 
-if MODEL_NAME.startswith("<"):
-    raise ValueError("请将 MODEL_NAME 替换为您已经创建的模型名称")
+# 获取 LangChain 格式的模型客户端
+llm = model(MODEL_NAME)
 
-code_interpreter_tools = []
-if SANDBOX_NAME and not SANDBOX_NAME.startswith("<"):
-    code_interpreter_tools = sandbox_toolset(
-        template_name=SANDBOX_NAME,
-        template_type=TemplateType.CODE_INTERPRETER,
-        sandbox_idle_timeout_seconds=300,
-    )
-else:
-    logger.warning("SANDBOX_NAME 未设置或未替换，跳过加载沙箱工具。")
+# 获取代码执行沙箱工具
+code_interpreter_tools = sandbox_toolset(
+    template_name=SANDBOX_NAME,
+    template_type=TemplateType.CODE_INTERPRETER,
+    sandbox_idle_timeout_seconds=300
+)
+```
 
-# ...
+这段代码展示了 AgentRun 的核心能力之一：通过简单的函数调用将云端资源转换为框架原生对象。`model()` 函数返回的是标准的 LangChain `BaseChatModel` 对象，`sandbox_toolset()` 返回的是 LangChain 工具列表，这意味着您可以无缝使用 LangChain 生态中的任何组件。
 
-# 自动启动 http server，提供 OpenAI 协议
+接下来是智能体逻辑的实现。项目模板中使用 LangChain 的 Agent 框架构建了一个支持函数调用的对话智能体：
+
+```python
+from langchain.agents import create_tool_calling_agent, AgentExecutor
+from langchain_core.prompts import ChatPromptTemplate
+
+# 定义智能体的系统提示词
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "你是一个智能助手，可以帮助用户执行代码。"),
+    ("placeholder", "{chat_history}"),
+    ("human", "{input}"),
+    ("placeholder", "{agent_scratchpad}")
+])
+
+# 创建智能体
+agent = create_tool_calling_agent(llm, code_interpreter_tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=code_interpreter_tools)
+
+# 定义调用入口函数
+def invoke_agent(request: AgentRequest):
+    """接收 HTTP 请求并返回智能体响应"""
+    user_input = request.messages[-1].content
+    result = agent_executor.invoke({"input": user_input})
+    return result["output"]
+```
+
+这里的 `invoke_agent` 函数是智能体的统一入口，它接收一个 `AgentRequest` 对象（包含对话历史等信息），执行智能体逻辑后返回响应。返回值可以是字符串、生成器（用于流式输出）或者 `AgentResponse` 对象，AgentRun 会自动处理这些不同的返回类型并转换为标准的 OpenAI 协议响应。
+
+最后是服务启动部分，使用 `AgentRunServer` 将智能体封装为 HTTP 服务：
+
+```python
+from agentrun.server import AgentRunServer
+
+# 启动 OpenAI 协议兼容的 HTTP 服务
 AgentRunServer(invoke_agent=invoke_agent).start()
 ```
 
-## 5. 调用 Agent
+这行代码会启动一个监听在 9000 端口的 HTTP 服务器，自动提供 `/v1/chat/completions` 等 OpenAI 兼容的 API 端点。
+
+## 准备云端资源
+
+在运行代码之前，需要在 AgentRun 控制台创建模型和沙箱模板资源。登录 [AgentRun 控制台](https://functionai.console.aliyun.com/)，按照以下步骤操作。
+
+首先创建模型服务。在左侧菜单中选择"模型管理"，点击"创建模型服务"按钮。填写模型名称（例如 `qwen-max`），选择模型提供商为"通义千问"，配置 API 凭证后保存。如果您希望使用其他模型提供商（如 OpenAI、Anthropic），需要先在"凭证管理"中创建对应的 API Key 凭证。
+
+接下来创建沙箱模板。在左侧菜单中选择"沙箱管理"，点击"创建模板"按钮。选择模板类型为"代码解释器"，填写模板名称（例如 `code-interpreter-python`），选择运行时为 Python 3.10，配置资源规格后保存。沙箱模板创建完成后，智能体就可以在隔离的容器环境中安全地执行用户提交的代码。
+
+完成资源创建后，回到代码中修改 `MODEL_NAME` 和 `SANDBOX_NAME` 为您刚才创建的资源名称。
+
+## 本地测试
+
+现在可以在本地启动智能体服务进行测试。激活虚拟环境后执行：
 
 ```bash
-curl 127.0.0.1:9000/openai/v1/chat/completions \
-  -XPOST \
-  -H "content-type: application/json" \
-  -d '{"messages": [{"role": "user", "content": "通过代码查询现在是几点?"}], "stream":true}'
+source .venv/bin/activate  # Linux/macOS
+# .venv\Scripts\activate  # Windows
+python index.py
 ```
 
-## 6. 部署项目
+服务启动后会看到类似 "Application startup complete" 的日志输出，表示服务已成功运行在 `http://127.0.0.1:9000`。
 
-项目中已经存在 `s.yaml` 文件，这是 Serverless Devs 的部署配置文件，通过这个文件，您可以配置当前 Agent 在 Agent Run 上的名称、CPU/内存规格、日志投递信息
+打开新的终端窗口，使用 curl 命令测试智能体的对话能力：
 
-在示例情况下，您只需要简单修改该文件即可。修改 `role` 字段为授信给阿里云函数计算（FC）服务，需要拥有AliyunAgentRunFullAccess权限的角色（如果您拥有精细化权限控制的需求，可以根据实际使用的 API 收敛权限）
+```bash
+curl http://127.0.0.1:9000/v1/chat/completions \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "使用 Python 代码计算 1 到 100 的和"}
+    ],
+    "stream": true
+  }'
+```
 
-> 您可以点击此[快速授权链接](https://ram.console.aliyun.com/authorize?request=%7B%22template%22%3A%22OldRoleCommonAuthorize%22%2C%22referrer%22%3A%22https%3A%2F%2Ffunctionai.console.aliyun.com%2Fcn-hangzhou%2Fexplore%22%2C%22payloads%22%3A%5B%7B%22missionId%22%3A%22OldRoleCommonAuthorize.FC%22%2C%22roleName%22%3A%22agentRunRole%22%2C%22roleDescription%22%3A%22AgentRun%20auto%20created%20role.%22%2C%22rolePolicies%22%3A%5B%7B%22policyName%22%3A%22AliyunAgentRunFullAccess%22%7D%2C%7B%22policyName%22%3A%22AliyunDevsFullAccess%22%7D%5D%7D%5D%2C%22callback%22%3A%22https%3A%2F%2Ffunctionai.console.aliyun.com%22%7D)，创建一个符合相关权限的角色agentRunRole。
-> 
-> 此快速创建角色的RoleArn为：acs:ram::\{您的阿里云主账号 ID\}:role/agentRunRole
+如果一切正常，您会看到智能体首先分析问题，然后调用代码执行工具运行 Python 代码，最后返回计算结果。响应格式遵循 OpenAI Chat Completions API 标准，这意味着任何支持 OpenAI 协议的客户端都可以直接对接您的智能体服务。
+
+您也可以尝试其他类型的问题，例如数据分析、文件操作等，观察智能体如何利用代码执行能力解决复杂任务。
+
+## 部署到云端
+
+本地测试通过后，可以将智能体部署到 AgentRun 云平台，获得生产级的可扩展性、可观测性和安全能力。
+
+首先需要配置部署凭证。执行 `s config add` 进入交互式配置流程，按照提示输入您的阿里云 Access Key 信息。在配置过程中需要为这组凭证指定一个别名（例如 `agentrun-deploy`），后续部署时会用到这个名称。
+
+接下来修改项目根目录的 `s.yaml` 配置文件。这个文件定义了智能体在云端的运行配置，包括资源规格、环境变量、日志配置等。您需要重点关注 `role` 字段，这是授权给函数计算服务的 RAM 角色：
 
 ```yaml
-role: acs:ram::\{您的阿里云主账号 ID\}:role/\{您的阿里云角色名称\}
+role: acs:ram::{您的阿里云主账号ID}:role/{角色名称}
 ```
 
-> 如果在未来的使用中遇到了任何 Serverless Devs 相关问题，都可以参考 [Serverless Devs 相关文档](https://serverless-devs.com/docs/overview)
+如果您还没有创建过相关角色，可以使用[快速授权链接](https://ram.console.aliyun.com/authorize?request=%7B%22template%22%3A%22OldRoleCommonAuthorize%22%2C%22referrer%22%3A%22https%3A%2F%2Ffunctionai.console.aliyun.com%2Fcn-hangzhou%2Fexplore%22%2C%22payloads%22%3A%5B%7B%22missionId%22%3A%22OldRoleCommonAuthorize.FC%22%2C%22roleName%22%3A%22agentRunRole%22%2C%22roleDescription%22%3A%22AgentRun%20auto%20created%20role.%22%2C%22rolePolicies%22%3A%5B%7B%22policyName%22%3A%22AliyunAgentRunFullAccess%22%7D%2C%7B%22policyName%22%3A%22AliyunDevsFullAccess%22%7D%5D%7D%5D%2C%22callback%22%3A%22https%3A%2F%2Ffunctionai.console.aliyun.com%22%7D)一键创建，创建后的角色 ARN 格式为 `acs:ram::{您的主账号ID}:role/agentRunRole`。
 
-在部署前，您需要配置您的部署密钥，使用 `s config add` 进入交互式密钥管理，并按照引导录入您在阿里云的 Access Key ID 与 Access Key Secret。在录入过程中，您需要短期记忆一下您输入的密钥对名称（假设为 `agentrun-deploy`）
-
-配置完成后，需要首先执行`s build`构建，该步骤依赖本地的`docker`服务，对代码目录下的`requirements.txt`进行构建，以便部署在云端。
-
-随后即可执行`s deploy`进行部署操作。
-
+准备工作完成后，执行构建和部署命令。构建步骤会在 Docker 容器中安装项目依赖，确保云端环境的一致性（因此需要确保本地 Docker 服务正在运行）：
 
 ```bash
 s build
 s deploy -a agentrun-deploy
-# agentrun-deploy 是您使用的密钥对名称，也可以将该名称写入到 s.yaml 开头的 access: 字段中
 ```
 
-## 7. 在线上进行调用
+其中 `-a agentrun-deploy` 指定使用前面配置的凭证别名。如果您希望避免每次部署都输入这个参数，可以在 `s.yaml` 文件开头添加 `access: agentrun-deploy` 配置项。
 
-部署完成后，您可以看到如下格式的输出
+部署过程需要几分钟时间，完成后会输出智能体的访问端点信息：
 
 ```
 endpoints:
-      -
-        id:          ...
-        arn:         ...
-        name:        ...
-        url:         https://12345.agentrun-data.cn-hangzhou.aliyuncs.com/agent-runtimes/abcd/endpoints/prod/invocations
+  -
+    id:   ep-xxxxxx
+    name: prod
+    url:  https://12345.agentrun-data.cn-hangzhou.aliyuncs.com/agent-runtimes/ar-xxxxxx/endpoints/prod/invocations
 ```
 
-此处的 url 为您的 Agent 调用地址，将实际的请求 path 拼接到该 base url 后，即可调用云上的 Agent 资源
+这个 URL 就是您的智能体在云端的访问地址。与本地测试类似，将实际的 API 路径拼接到这个基础 URL 后即可调用：
 
 ```bash
-curl https://12345.agentrun-data.cn-hangzhou.aliyuncs.com/agent-runtimes/abcd/endpoints/prod/invocations/openai/v1/chat/completions \
-  -XPOST \
-  -H "content-type: application/json" \
-  -d '{"messages": [{"role": "user", "content": "通过代码查询现在是几点?"}], "stream":true}'
+curl https://12345.agentrun-data.cn-hangzhou.aliyuncs.com/agent-runtimes/ar-xxxxxx/endpoints/prod/invocations/v1/chat/completions \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "使用 Python 代码计算斐波那契数列的第 20 项"}
+    ],
+    "stream": true
+  }'
 ```
+
+云端部署的智能体具备自动扩缩容能力，可以根据请求量动态调整实例数量。您还可以在 AgentRun 控制台查看智能体的运行日志、性能指标和调用统计，便于监控和优化。
+
+## 下一步
+
+完成快速开始后，您已经掌握了 AgentRun 的基本使用流程。根据实际需求，可以继续探索以下主题：
+
+**增强智能体能力**：除了代码执行沙箱，AgentRun 还提供浏览器沙箱（用于网页自动化）、向量数据库（用于 RAG 应用）、HTTP 工具集（用于 API 调用）等多种工具。您可以参考"工具集成实战"教程了解如何组合使用这些工具。
+
+**模型策略优化**：如果您需要在多个模型之间切换（例如根据问题复杂度选择不同模型），或者希望实现模型调用的负载均衡和容错，可以参考"模型集成实战"教程学习模型代理的配置方法。
+
+**多框架集成**：AgentRun 不仅支持 LangChain，还可以与 CrewAI、LangGraph、AgentScope 等主流框架集成。如果您希望使用其他框架或者在项目中切换框架，可以参考"框架集成指南"教程。
+
+**生产环境部署**：在将智能体用于生产环境之前，建议阅读"生产环境部署清单"，了解性能优化、错误处理、安全加固等最佳实践。
+
+如果在使用过程中遇到问题，可以查阅"问题排查指南"或访问 [AgentRun 官方文档](https://docs.agent.run/)获取帮助。
