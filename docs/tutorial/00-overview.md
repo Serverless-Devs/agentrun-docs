@@ -10,6 +10,9 @@ AgentRun 是以高代码为核心，开放生态、灵活组装的一站式 Agen
 
 AgentRun Python SDK 是平台的官方客户端库，提供了完整的 Python API 来管理和调用 AgentRun 服务。通过这个 SDK，开发者可以在本地开发环境中编写、测试 Agent 应用，并无缝部署到云端运行。
 
+<img src="https://github.com/user-attachments/assets/22f1cb98-1e42-47ac-b3c1-3d5d9c8c00f5" />
+
+
 ## SDK 的核心价值
 
 AgentRun Python SDK 采用面向对象的设计理念，将云端资源抽象为 Python 对象，使开发者能够像操作本地对象一样管理云端资源。SDK 同时提供同步和异步两套 API，支持多种认证方式，并包含完整的类型注解，为 IDE 提供良好的代码提示支持。
