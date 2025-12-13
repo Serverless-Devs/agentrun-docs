@@ -2,9 +2,13 @@
 sidebar_position: 20
 ---
 
-# 最佳实践：多 Agent 协作系统
+# 最佳实践案例：通过 A2A 构建多 Agent 协作系统
+
+<img src="https://github.com/user-attachments/assets/74590185-e734-4a0b-ab2f-9ea1af236837" />
+
 
 > 目前该代码已经发布到 Serverless Registry，可以通过 Serverless Devs 工具进行下载：`s init buy-me-a-coffee`
+
 
 ## 案例概述
 
@@ -19,6 +23,9 @@ sidebar_position: 20
 系统中的三个核心 Agent 各司其职。日常助手 Agent 提供天气查询、时间管理、提醒和日程安排等基础功能，这些功能通过内存数据结构实现，无需持久化存储。咖啡店 Agent 负责咖啡订购业务，包括菜单展示、商品搜索、订单创建和状态查询，所有操作通过 HTTP 请求调用咖啡店后端 API 完成。配送 Agent 专注于配送服务，支持创建配送单、查询配送状态和更新配送进度，同样通过 HTTP 调用配送服务 API。
 
 Agent 间的通信采用两种机制。日常助手直接集成在网关层，作为本地子 Agent 运行。咖啡店和配送 Agent 则独立部署，通过 A2A 协议暴露服务，网关层通过 RemoteA2aAgent 与它们通信。这种混合架构既保证了核心功能的响应速度，又提供了业务模块的独立性和可扩展性。
+
+<img width="1622" height="836" alt="image" src="https://github.com/user-attachments/assets/de002660-4299-41b0-bb25-178e87533cd2" />
+
 
 ## Google ADK 框架深度解析
 
@@ -946,3 +953,36 @@ Agent 的响应时间很大程度上取决于模型的推理速度和工具调�
 使用结构化日志格式（如 JSON）便于日志分析。每条日志应该包含时间戳、日志级别、服务名称、请求 ID、具体消息等字段。请求 ID 可以用于追踪一个请求在多个服务间的完整流程。
 
 性能监控应该关注几个关键指标：响应时间、错误率、请求量、资源使用率。建立这些指标的基准值，当指标异常时及时告警。例如如果平均响应时间突然增加 50%，可能表示系统出现了性能问题。
+
+
+------
+
+为了便于大家进行快速体验，可以通过 AgentRun 控制台探索页面进行快速体验
+
+- 访问[https://functionai.console.aliyun.com/cn-hangzhou/agent/explore](AgentRun 探索页面): 
+
+<img src="https://github.com/user-attachments/assets/dacd8749-2144-41d2-b494-580114c8b4b0" />
+
+- 按照要求，填写模型信息：
+
+<img src="https://github.com/user-attachments/assets/00889a10-067f-470b-b145-116be075f8d6" />
+
+
+- 进行 Agent 创建：
+
+<img src="https://github.com/user-attachments/assets/5e9af704-9b54-41e3-b3bc-96690e9c3842" />
+
+- 访问创建后的 Agent 进行体验
+
+<img src="https://github.com/user-attachments/assets/1594462a-628f-4df6-8e31-922b86cfa7cb" />
+
+<img src="https://github.com/user-attachments/assets/4b03d8a7-9906-42c8-8758-07cab19af98f" />
+
+<img src="https://github.com/user-attachments/assets/837043db-e09f-464d-ba5b-b8de6bc7be0f" />
+
+<img src="https://github.com/user-attachments/assets/69aa1e71-b979-4b3f-80cb-440f226a71e1" />
+
+
+
+
+
