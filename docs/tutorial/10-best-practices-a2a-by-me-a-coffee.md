@@ -1,5 +1,5 @@
 ---
-sidebar_position: 20
+sidebar_position: 22
 ---
 
 # 最佳实践案例：通过 A2A 构建多 Agent 协作系统
