@@ -959,7 +959,7 @@ Agent 的响应时间很大程度上取决于模型的推理速度和工具调�
 
 为了便于大家进行快速体验，可以通过 AgentRun 控制台探索页面进行快速体验
 
-- 访问[https://functionai.console.aliyun.com/cn-hangzhou/agent/explore](AgentRun 探索页面): 
+- 访问[AgentRun 探索页面](https://functionai.console.aliyun.com/cn-hangzhou/agent/explore): 
 
 <img src="https://github.com/user-attachments/assets/dacd8749-2144-41d2-b494-580114c8b4b0" />
 
