@@ -375,7 +375,7 @@ results = await asyncio.gather(*tasks, return_exceptions=True)
 
 为了便于大家进行快速体验，可以通过 AgentRun 控制台探索页面进行快速体验
 
-- 访问[https://functionai.console.aliyun.com/cn-hangzhou/agent/explore](AgentRun 探索页面): 
+- 访问[AgentRun 探索页面](https://functionai.console.aliyun.com/cn-hangzhou/agent/explore): 
 
 <img src="https://github.com/user-attachments/assets/35bbef8c-0863-47f4-8e68-f2d6972a7ac2" />
 
