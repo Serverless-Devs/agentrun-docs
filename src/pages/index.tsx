@@ -5,7 +5,7 @@ import Layout from '@theme/Layout';
 export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext();
   useEffect(() => {
-    if (window) window.location.href = '/docs/tutorial/quick-start';
+    if (window) window.location.href = '/docs/tutorial/overview';
   });
   return (
     <Layout
