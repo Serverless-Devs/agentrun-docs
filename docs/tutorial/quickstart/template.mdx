@@ -1,14 +1,20 @@
 ---
-sidebar_position: 12
+sidebar_position: 20
 ---
 
-# 创建第一个 Agent
+import PartialInstallS from '@site/docs/_partial/_install_s.mdx';
 
-本教程将引导您在 10 分钟内创建并部署一个完整的 Agent 应用。我们将使用 LangChain 框架构建一个支持代码执行的智能助手，该助手能够通过编写和运行代码来解决各种问题。
+# 使用模板创建 Agent
+
+本教程是一个端到端的实践指南，将引导您在 10 分钟内创建并部署一个完整的 Agent 应用。我们将使用 LangChain 框架构建一个支持代码执行的智能助手，该助手能够通过编写和运行代码来解决各种问题。
+
+## 环境准备
+
+<PartialInstallS />
 
 ## 使用脚手架创建项目
 
-AgentRun 提供了开箱即用的项目模板，可以快速生成包含最佳实践的项目结构。在开始之前，请确保您已按照前面的章节完成了 Serverless Devs 工具的安装。
+AgentRun 提供了开箱即用的项目模板，可以快速生成包含最佳实践的项目结构。
 
 在终端中执行项目初始化命令：
 
@@ -94,7 +100,7 @@ MODEL_NAME = "my-model"  # 替换为实际的模型名称
 SANDBOX_NAME = "my-sandbox"  # 替换为实际的沙箱模板名称
 ```
 
-同时，在 `code` 目录下创建 `.env` 文件，配置认证信息：
+同时，在 `code` 目录下创建 `.env` 文件，全局参数配置：
 
 ```bash
 AGENTRUN_ACCESS_KEY_ID=your-access-key-id
@@ -103,14 +109,14 @@ AGENTRUN_ACCOUNT_ID=your-account-id
 AGENTRUN_REGION=cn-hangzhou
 ```
 
-确保这些环境变量的值与您在安装配置章节中设置的一致。
+关于环境变量的更多信息，可以参考 [全局参数配置](./installation#全局参数配置)
 
 ## 本地运行测试
 
 完成配置后，就可以在本地启动 Agent 服务进行测试了。在 `code` 目录下执行：
 
 ```bash
-python app.py
+uv run app.py
 ```
 
 程序启动后，会输出类似以下的日志信息：

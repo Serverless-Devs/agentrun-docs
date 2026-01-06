@@ -762,7 +762,7 @@ async def chat_stream(request: ChatRequest):
 系统的配置管理使用了环境变量和合理的默认值相结合的方式：
 
 ```python
-def get_env_with_default(default_value: str, *env_names: str) -> str:
+def get_config_with_default(default_value: str, *env_names: str) -> str:
     """按优先级获取环境变量值"""
     for name in env_names:
         value = os.getenv(name)
@@ -771,7 +771,7 @@ def get_env_with_default(default_value: str, *env_names: str) -> str:
     return default_value
 
 GATEWAY_PORT = int(
-    get_env_with_default(
+    get_config_with_default(
         "8000", "GATEWAY_PORT", "FC_SERVER_PORT", "FC_CUSTOM_LISTEN_PORT"
     )
 )
@@ -786,11 +786,11 @@ AgentRun 集成通过 SDK 的 integration 模块实现：
 ```python
 from agentrun.integration.google_adk import model, toolset
 
-MODEL_NAME = get_env_with_default("", "MODEL_NAME")
-AGENTRUN_MODEL_NAME = get_env_with_default("", "AGENTRUN_MODEL_NAME")
+MODEL_NAME = get_config_with_default("", "MODEL_NAME")
+AGENTRUN_MODEL_NAME = get_config_with_default("", "AGENTRUN_MODEL_NAME")
 DEFAULT_LLM = model(AGENTRUN_MODEL_NAME, model=MODEL_NAME)
 
-COFFEE_TOOLSET_NAME = get_env_with_default("", "COFFEE_TOOLSET_NAME")
+COFFEE_TOOLSET_NAME = get_config_with_default("", "COFFEE_TOOLSET_NAME")
 COFFEE_TOOLSET = toolset(COFFEE_TOOLSET_NAME) if COFFEE_TOOLSET_NAME else []
 ```
 

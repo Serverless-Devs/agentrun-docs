@@ -1,0 +1,9 @@
+为了提升安全性，您不需要将阿里云密钥配置到环境变量中，取而代之的是通过角色进行授权。当您为 AgentRun/函数计算 配置了角色后，您的程序在启动时将会自动根据角色权限注入临时密钥到环境变量。及时由于意外问题导致密钥泄漏，该临时密钥也会在固定时间后自动过期，减少损失。
+
+通常，在 AgentRun 场景下，您需要为角色配置如下权限
+- `AliyunAgentRunFullAccess`: 允许您的代码访问 AgentRuntime、Sandbox、Model、Credential 等能力
+- `AliyunDevsFullAccess`: 允许您的代码访问 ToolSet 
+
+如果您还需要访问其他云产品，则可以按需增加权限。对于特定业务场景，您也可以进行精确授权，如仅授予某个资源的读权限。更多信息可以参考 [RAM角色概览](https://help.aliyun.com/zh/ram/user-guide/ram-role-overview)
+
+如果您需要快速创建一个拥有 `AliyunAgentRunFullAccess` 和 `AliyunDevsFullAccess` 权限的角色，则可以点击 [快速授权链接](https://ram.console.aliyun.com/authorize?request=%7B%22template%22%3A%22OldRoleCommonAuthorize%22%2C%22referrer%22%3A%22https%3A%2F%2Ffunctionai.console.aliyun.com%2Fcn-hangzhou%2Fexplore%22%2C%22payloads%22%3A%5B%7B%22missionId%22%3A%22OldRoleCommonAuthorize.FC%22%2C%22roleName%22%3A%22AliyunAgentRunDefaultRole%22%2C%22roleDescription%22%3A%22AgentRun%20auto%20created%20role.%22%2C%22rolePolicies%22%3A%5B%7B%22policyName%22%3A%22AliyunAgentRunFullAccess%22%7D%2C%7B%22policyName%22%3A%22AliyunDevsFullAccess%22%7D%5D%7D%5D%2C%22callback%22%3A%22https%3A%2F%2Ffunctionai.console.aliyun.com%22%7D)

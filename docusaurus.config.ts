@@ -20,6 +20,9 @@ const config: Config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
 
+  // Load custom client scripts (e.g. insert alt captions for images)
+  scripts: [{ src: '/js/show-img-alt.js', defer: true }],
+
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'serverless-devs', // Usually your GitHub org/user name.
@@ -50,7 +53,11 @@ const config: Config = {
                   .replace('.md', '.py')}`
               : `https://github.com/Serverless-Devs/agentrun-docs/edit/main/docs/${args.docPath}`;
           },
+          remarkPlugins: [
+            [require('@docusaurus/remark-plugin-npm2yarn'), { sync: true }],
+          ],
         },
+
         blog: false,
         theme: {
           customCss: './src/css/custom.css',
@@ -70,7 +77,7 @@ const config: Config = {
       logo: {
         alt: 'AgentRun',
         src: 'img/logo.svg',
-        href: "https://www.agent.run"
+        href: 'https://www.agent.run',
       },
       items: [
         {
@@ -79,22 +86,28 @@ const config: Config = {
           position: 'left',
           label: '使用 AgentRun',
         },
-        {
-          type: 'docSidebar',
-          sidebarId: 'sdkPythonSidebar',
-          position: 'left',
-          label: 'Python SDK',
-        },
-        {
-          type: 'docSidebar',
-          sidebarId: 'sdkNodeJSSidebar',
-          position: 'left',
-          label: 'NodeJS SDK',
-        },
+        // {
+        //   type: 'docSidebar',
+        //   sidebarId: 'sdkPythonSidebar',
+        //   position: 'left',
+        //   label: 'Python SDK',
+        // },
+        // {
+        //   type: 'docSidebar',
+        //   sidebarId: 'sdkNodeJSSidebar',
+        //   position: 'left',
+        //   label: 'NodeJS SDK',
+        // },
 
         {
           href: 'https://github.com/Serverless-Devs/agentrun-sdk-python',
           label: 'Python SDK',
+          position: 'right',
+          className: 'header-github-link',
+        },
+        {
+          href: 'https://github.com/Serverless-Devs/agentrun-sdk-nodejs',
+          label: 'NodeJS SDK',
           position: 'right',
           className: 'header-github-link',
         },
@@ -148,12 +161,57 @@ const config: Config = {
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
+      additionalLanguages: ['bash'],
+      magicComments: [
+        // Remember to extend the default highlight class name as well!
+        {
+          className: 'theme-code-block-highlighted-line',
+          line: 'highlight-next-line',
+          block: { start: 'highlight-start', end: 'highlight-end' },
+        },
+        {
+          className: 'code-block-error-line',
+          line: 'error-next-line',
+          block: { start: 'error-start', end: 'error-end' },
+        },
+        {
+          className: 'code-block-success-line',
+          line: 'success-next-line',
+          block: { start: 'success-start', end: 'success-end' },
+        },
+        {
+          className: 'code-block-info-line',
+          line: 'info-next-line',
+          block: { start: 'info-start', end: 'info-end' },
+        },
+      ],
+    },
+    zoom: {
+      selector: '.markdown img',
+      background: {
+        light: 'rgb(255, 255, 255)',
+        dark: 'rgb(50, 50, 50)',
+      },
+      config: {
+        // options you can specify via https://github.com/francoischalifour/medium-zoom#usage
+      },
     },
   } satisfies Preset.ThemeConfig,
 
   plugins: [
     './src/plugins/tailwind-config.js',
     './src/plugins/webpack-cache-config.js',
+    'image-zoom',
+    // [
+    //   '@docusaurus/plugin-ideal-image',
+    //   {
+    //     quality: 70,
+    //     max: 1030, // max resized image's size.
+    //     min: 640, // min resized image's size. if original is lower, use that size.
+    //     steps: 2, // the max number of images generated between min and max (inclusive)
+    //     disableInDev: false,
+    //   },
+    // ],
   ],
 };
 

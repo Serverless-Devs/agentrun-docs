@@ -54,7 +54,7 @@ cd agentrun-quick-start-langchain/code
 uv venv && uv pip install -r requirements.txt
 ```
 
-### 第三步：配置认证信息
+### 第三步：全局参数配置
 通过环境变量（建议使用 `.env` 文件）配置你的 AgentRun 访问凭证：
 
 ```bash

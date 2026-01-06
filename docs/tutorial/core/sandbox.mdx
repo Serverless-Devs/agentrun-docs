@@ -1,5 +1,5 @@
 ---
-sidebar_position: 15
+sidebar_position: 20
 ---
 
 # 沙箱使用基础
@@ -96,16 +96,16 @@ async def run_analysis():
         template_type=TemplateType.CODE_INTERPRETER,
         template_name="my-code-sandbox"
     )
-    
+
     context = await sandbox.context.create_async()
-    
+
     # 并发执行多个分析任务
     tasks = [
         context.execute_async("result1 = 1 + 1"),
         context.execute_async("result2 = 2 + 2"),
         context.execute_async("result3 = 3 + 3")
     ]
-    
+
     results = await asyncio.gather(*tasks)
     return results
 
@@ -337,23 +337,23 @@ async def scrape_website():
         template_type=TemplateType.BROWSER,
         template_name="my-browser-sandbox"
     )
-    
+
     browser = sandbox.async_playwright()
     await browser.open()
-    
+
     # 访问多个页面
     urls = [
         "https://example1.com",
         "https://example2.com",
         "https://example3.com"
     ]
-    
+
     for url in urls:
         await browser.goto(url)
         await browser.wait(2000)
         html = await browser.html_content()
         print(f"抓取 {url}: {len(html)} 字符")
-    
+
     await browser.close()
 
 asyncio.run(scrape_website())
@@ -411,19 +411,19 @@ class WebScraperAgent:
         )
         self.browser = self.sandbox.sync_playwright()
         self.browser.open()
-    
+
     def search_and_extract(self, keyword: str):
         """在搜索引擎中搜索关键词并提取结果"""
         # 访问搜索引擎
         self.browser.goto("https://www.google.com")
-        
+
         # 填写搜索框
         self.browser.fill("input[name='q']", keyword)
         self.browser.click("input[type='submit']")
-        
+
         # 等待结果加载
         self.browser.wait(3000)
-        
+
         # 提取搜索结果
         results = self.browser.evaluate("""
         () => {
@@ -432,7 +432,7 @@ class WebScraperAgent:
                 const title = item.querySelector('h3');
                 const link = item.querySelector('a');
                 const snippet = item.querySelector('.VwiC3b');
-                
+
                 return {
                     title: title ? title.textContent : '',
                     url: link ? link.href : '',
@@ -441,14 +441,14 @@ class WebScraperAgent:
             });
         }
         """)
-        
+
         return results
-    
+
     def visit_and_analyze(self, url: str):
         """访问页面并分析内容"""
         self.browser.goto(url)
         self.browser.wait(2000)
-        
+
         # 获取页面元数据
         metadata = self.browser.evaluate("""
         () => {
@@ -462,15 +462,15 @@ class WebScraperAgent:
             };
         }
         """)
-        
+
         # 截图保存
         screenshot = self.browser.screenshot()
-        
+
         return {
             'metadata': metadata,
             'screenshot': screenshot
         }
-    
+
     def close(self):
         self.browser.close()
 

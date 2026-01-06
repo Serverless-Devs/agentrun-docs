@@ -244,10 +244,10 @@ def get_headers(self) -> Dict[str, str]
 
 ## 函数
 
-## get_env_with_default
+## get_config_with_default
 
 ```python
-def get_env_with_default(default: str, *key: str) -> str
+def get_config_with_default(default: str, *key: str) -> str
 ```
 
 从环境变量获取值,支持多个候选键 / Get value from environment variables with multiple fallback keys

@@ -1,0 +1,98 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+AgentRun SDK 支持如下配置，可以通过多种方式注入程序
+
+|    Config 配置项    |                            环境变量                             |             说明             |
+| :-----------------: | :-------------------------------------------------------------: | :--------------------------: |
+|   `access_key_id`   |     `AGENTRUN_ACCESS_KEY_ID`、`ALIBABA_CLOUD_ACCESS_KEY_ID`     |        Access Key ID         |
+| `access_key_secret` | `AGENTRUN_ACCESS_KEY_SECRET`、`ALIBABA_CLOUD_ACCESS_KEY_SECRET` |      Access Key Secret       |
+|  `security_token`   |    `AGENTRUN_SECURITY_TOKEN`、`ALIBABA_CLOUD_SECURITY_TOKEN`    |          STS Token           |
+|    `account_id`     |             `AGENTRUN_ACCOUNT_ID`、`FC_ACCOUNT_ID`              |           账号 ID            |
+|       `token`       |                                                                 | 请求数据链路时，使用的 token |
+|     `region_id`     |                 `AGENTRUN_REGION`、`FC_REGION`                  |             区域             |
+|      `timeout`      |                                                                 |                              |
+|   `read_timeout`    |                                                                 |                              |
+| `control_endpoint`  |                   `AGENTRUN_CONTROL_ENDPOINT`                   |           控制端点           |
+|   `data_endpoint`   |                    `AGENTRUN_DATA_ENDPOINT`                     |           数据端点           |
+|   `devs_endpoint`   |                         `DEVS_ENDPOINT`                         |          Devs 端点           |
+|                     |                      `AGENTRUN_SDK_DEBUG`                       |       开启 DEBUG 日志        |
+|      `headers`      |                                                                 |    发送请求时，附加的头部    |
+
+要访问您在云上的 AgentRun 资源，需要配置阿里云的密钥。通常您的密钥为 ACCESS_KEY_ID 和 ACCESS_KEY_SECRET。当使用 AssumeRole 方式生成临时密钥时，还会存在 SECURITY_TOKEN。
+如果您只需要访问数据链路，也可以仅配置 AgentRun Token
+
+<Tabs><TabItem value="env" label="通过 .env 配置" default>
+
+`.env` 是一个特殊的文件，用来约定程序运行需要的环境变量。
+将您的 Agent 需要的环境变量写入在 `.env` 后，SDK 会自动读取 .env 的配置。这样既方便管理，又避免了在代码中硬编码敏感信息。
+
+:::warning[注意]
+请确保将 `.env` 文件添加到 `.gitignore`，避免误提交到版本控制系统，导致敏感信息泄漏。
+:::
+
+```bash title=".env"
+AGENTRUN_ACCESS_KEY_ID="LT*************"
+AGENTRUN_ACCESS_KEY_SECRET="DU*************"
+AGENTRUN_ACCOUNT_ID="143*********149"
+AGENTRUN_REGION="cn-hangzhou"
+```
+
+</TabItem><TabItem value="export" label="通过 export 配置">
+
+如果仅仅是一次性配置环境变量，也可以在终端中临时进行配置环境变量
+
+使用该方式，仅有 ./start 可以访问到环境变量
+
+```bash
+AGENTRUN_ACCESS_KEY_ID="LT*************" AGENTRUN_ACCESS_KEY_SECRET="DU*************" ./start
+```
+
+使用该方式，当前 shell 及子进程中均能访问到环境变量
+
+```bash
+export AGENTRUN_ACCESS_KEY_ID="LT*************"
+export AGENTRUN_ACCESS_KEY_SECRET="DU*************"
+
+./start
+```
+
+</TabItem><TabItem value="code" label="通过代码配置">
+
+您也可以在代码中直接创建 Config 对象来全局参数配置。这种方式适合需要动态切换配置的场景：
+
+创建的 Config 对象可以在调用 SDK API 时作为参数传入。如果同时存在环境变量配置和代码配置，SDK 会优先使用代码中显式传入的配置。
+
+对于需要支持多账号或多区域的应用，可以创建多个 Config 对象并在调用时指定。例如，某些操作在国内区域执行，某些操作在海外区域执行。
+
+<Tabs groupId="language" queryString><TabItem value="python" label="Python" attributes={{ className: 'python-icon' }}>
+
+```python
+from agentrun.utils.config import Config
+
+config = Config(
+    access_key_id="LT*************",
+    access_key_secret="DU*************",
+)
+```
+
+</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+
+```js
+import { Config } from '@agentrun/sdk';
+
+const config = new Config({
+  accessKeyId: 'LT*************',
+  accessKeySecret: 'DU*************',
+});
+```
+
+</TabItem></Tabs>
+
+</TabItem></Tabs>
+
+:::info[从本地到云上]
+在部署到 AgentRun 时，您可以在 Agent Runtime 配置环境变量来替代您在本地 `.env`。
+
+为了增强安全性，可以通过配置角色的方式来替代 `AGENTRUN_ACCESS_KEY_ID` 等环境变量，AgentRun 在启动您的 Agent 时，会根据角色权限为您创建临时的密钥并注入在环境变量中。
+:::

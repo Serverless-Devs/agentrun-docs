@@ -1,0 +1,13 @@
+要创建模型服务，需要进入 AgentRun 控制台 - [模型管理](https://functionai.console.aliyun.com/cn-hangzhou/agent/models/llm)
+
+![点击创建模型](https://img.alicdn.com/imgextra/i2/O1CN017gyJH61RTo0FIamfw_!!6000000002113-2-tps-2712-1068.png)
+
+AgentRun 支持注册第三方的模型，也可以直接在函数计算 FunModel 部署开源/私有大模型
+对于注册的第三方模型，需要选择模型的来源（用来确认请求的交互协议以及 BaseURL）
+一个模型服务可以配置多个模型，如果通过 SDK 调用且未明确指定模型名时，会使用列表的第一个模型
+
+![填写模型信息](https://img.alicdn.com/imgextra/i1/O1CN01Tvqm831C0kdoFuu30_!!6000000000019-2-tps-1224-3198.png)
+
+创建完成后，您应该可以在模型列表看到您创建的模型
+
+![创建结果](https://img.alicdn.com/imgextra/i3/O1CN01Q0JurV1LqoCVjtgZg_!!6000000001351-2-tps-1134-924.png)

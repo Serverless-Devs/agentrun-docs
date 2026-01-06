@@ -1,0 +1,1119 @@
+---
+sidebar_position: 10
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import PartModel from '@site/docs/_partial/_create_model_service.mdx';
+import PartSandbox from '@site/docs/_partial/_create_sandbox_browser.mdx';
+import PartInstallS from '@site/docs/_partial/_install_s.mdx';
+import PartRole from '@site/docs/_partial/_role.mdx';
+
+# 从零创建 Agent
+
+本教程是一个端到端的实践指南，将引导您手动创建并部署一个完整的 Agent 应用。
+
+## 准备工作
+
+### 开发环境准备
+
+为了存放您的代码，首选需要创建一个文件夹，如 `my-agentrun`。然后进入项目文件夹（当前，应该是一个空白文件夹）
+
+首先，您需要根据不同的语言选择对应的框架，目前 AgentRun 提供了如下 SDK
+
+<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+
+我们建议您使用 `uv` 进行项目管理（使用 `uv` 需要先安装 [Python](https://www.python.org/downloads/)），参考如下命令进行 `uv` 的安装与升级
+
+<Tabs><TabItem value="linux" label="Linux" default>
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+</TabItem><TabItem value="mac" label="Mac">
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+</TabItem><TabItem value="windows" label="Windows">
+
+```bash
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+</TabItem><TabItem value="pip" label="pip">
+
+```bash
+pip install uv
+```
+
+</TabItem><TabItem value="pipx" label="pipx">
+
+```bash
+pipx install uv
+```
+
+</TabItem><TabItem value="uv" label="uv">
+
+如果您已经安装了 `uv`，可以使用如下命令进行升级
+
+```bash
+uv self update
+```
+
+</TabItem><TabItem value="none" label="我不想用 uv">
+
+如果您不想使用 `uv`，也可以在后续文档中，替换执行的命令
+
+- `uv run main.py` 替换为 `python3 main.py`
+- `uv pip install ...` 替换为 `python3 -m pip install ...`
+
+</TabItem></Tabs>
+
+由于 AgentRun 需要确保您的 Python 版本在 **3.10** 及以上，我们可以通过 `uv` 配置 3.10 的虚拟环境
+
+```bash
+uv venv -p 3.10
+```
+
+完成后，执行如下命令检查您的 Python 版本
+
+```bash
+uv run python --version
+```
+
+</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+
+您需要确保您的 [NodeJS](https://nodejs.org/en/download) 版本在 **18.0.0** 及以上
+
+执行如下命令检查您的 NodeJS 版本
+
+```bash
+node -v
+```
+
+您也可以使用其他您喜欢的运行时（如 Deno、Bun）进行代码编写
+
+</TabItem></Tabs>
+
+至此，您已经配置好了开发环境
+
+### 依赖安装
+
+为了后续的代码可以正确执行，我们需要进行依赖安装
+
+<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+
+在项目目录创建如下文件
+
+```txt title="requirements.txt"
+agentrun-sdk[server,langchain]==0.0.9
+```
+
+:::note
+由于是基于 langchain 完成代码开发，并且会使用 AgentRun Server 启动 http server，因此增加了可选依赖的安装
+:::
+
+:::warning
+目前 AgentRun 还在开发初期，我们会尽量避免不兼容的变更，但为了确保业务稳定性，建议您锁住使用的依赖版本，避免出现非预期的问题。
+:::
+
+接下来，使用如下命令执行安装任务
+
+```bash
+uv pip install -r requirements.txt -i http://mirrors.aliyun.com/pypi/simple/
+```
+
+:::note
+这里我们使用 `-i http://mirrors.aliyun.com/pypi/simple/` 参数，通过阿里云 PyPI 镜像加速依赖的安装速度
+:::
+
+</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+
+```json package.json
+{
+  "name": "my-agentrun-nodejs",
+  "version": "1.0.0",
+  "description": "AgentRun AI Assistant with Mastra Framework",
+  "license": "ISC",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@ag-ui/encoder": "^0.0.42",
+    "@ag-ui/mastra": "^0.2.0",
+    // highlight-next-line
+    "@agentrun/sdk": "0.0.2",
+    "@mastra/core": "^0.24.9",
+    "playwright": "^1.52.0",
+    "zod": "^3.24.4"
+  },
+  "overrides": {
+    "@mastra/core": "^0.24.9"
+  }
+}
+```
+
+:::warning
+目前 AgentRun 还在开发初期，我们会尽量避免不兼容的变更，但为了确保业务稳定性，建议您锁住使用的依赖版本，避免出现非预期的问题。
+:::
+
+接下来，使用如下命令执行安装任务
+
+```bash
+npm i --registry=https://registry.npmmirror.com
+```
+
+:::note
+这里我们使用 `--registry=https://registry.npmmirror.com` 参数，通过 NPM Mirror 镜像加速依赖的安装速度
+:::
+
+</TabItem></Tabs>
+
+### 云上资源准备
+
+AgentRun 提供的是 AI Infra 能力，因此您需要提前创建好需要使用的资源。
+
+:::info 友情提示
+相关的资源均可通过 AgentRun SDK 创建，但创建资源非当前实践的重点，因此这里通过控制台创建
+:::
+
+#### 模型创建
+
+<PartModel />
+
+#### Sandbox 创建
+
+<PartSandbox />
+
+### 配置环境变量
+
+为了使用上一步创建的 AgentRun 资源，我们需要通过环境变量的形式注入这些信息给您的代码，为了方便调试，这里使用 `.env` 的形式注入。
+您也可以参考 [全局参数](../installation#全局参数配置) 通过其他方式进行配置
+
+```bash [title=".env"]
+################
+#   密钥部分   #
+################
+
+AGENTRUN_ACCESS_KEY_ID="LT*************"
+AGENTRUN_ACCESS_KEY_SECRET="DU*************"
+AGENTRUN_ACCOUNT_ID=143*********149
+
+
+################
+# 业务资源描述 #
+################
+
+# 您在云上的模型资源
+MODEL_SERVICE=my-agentrun-model
+MODEL_NAME=qwen3-max
+
+# 您在云上的 Sandbox 资源
+SANDBOX_NAME=my-agentrun-browser
+
+# 开启 DEBUG 日志
+AGENTRUN_SDK_DEBUG=1
+```
+
+为了避免将上述包含敏感信息的文件传入 git 仓库导致安全问题，您可以增加 `.gitignore` 文件忽略 `.env` 文件
+
+```bash [title=".gitignore"]
+.env
+.venv
+```
+
+## 撰写代码
+
+接下来，您需要编辑您的代码文件。为了简化操作并且尽可能体验更多 AgentRun 的能力，我们选择的场景是 “支持网络搜索的 Agent”。
+
+我们没有直接通过 “百度搜索工具” 等方式进行网络搜索，而是让大模型自己开启一个浏览器（借助 AgentRun 浏览器沙箱能力），大模型需要自己判断如何在页面中提取关键信息，并适当的页面访问操作。
+
+:::warning
+操作浏览器对大模型的能力存在较高要求，强烈建议您使用 `qwen3-max` 大模型
+:::
+
+<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+
+```python [title="main.py"]
+from agentrun import AgentRequest
+from agentrun.integration.langchain import (
+    model,
+    sandbox_toolset,
+    AgentRunConverter,
+)
+from agentrun.server import AgentRunServer
+from agentrun.sandbox import TemplateType
+from langchain.agents import create_agent
+
+import os
+
+MODEL_SERVICE = os.getenv("MODEL_SERVICE", "")
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen3-max")
+
+SANDBOX_NAME = os.getenv("SANDBOX_NAME", "")
+
+agent = create_agent(
+    # info-next-line
+    # 只需要一行代码，即可在您喜爱的框架中使用 AgentRun 注册的模型
+    # info-next-line
+    model=model(MODEL_SERVICE, model=MODEL_NAME),
+    system_prompt="""
+你是 AgentRun 的 AI 助手，可以通过网络搜索帮助用户解决问题
+
+
+你的工作流程如下
+- 当用户向你提问概念性问题时，不要直接回答，而是先进行网络搜索
+- 使用 Browser 工具打开百度搜索。如果要搜索 AgentRun，对应的搜索链接为: `https://www.baidu.com/s?ie=utf-8&wd=agentrun`。为了节省 token 使用，不要使用 `snapshot` 获取完整页面内容，而是通过 `evaluate` 获取你需要的部分
+- 获取百度搜索的结果，根据相关性分别打开子页面获取内容
+    - 如果子页面的相关度较低，则可以直接忽略
+    - 如果子页面的相关度较高，则将其记录为可参考的资料，记录页面标题和实时的 url
+- 当你获得至少 3 条网络信息后，可以结束搜索，并根据搜索到的结果回答用户的问题。
+- 如果某一部分回答引用了网络的信息，需要进行标注，并在回答的最后给出跳转链接
+""",
+    # info-next-line
+    # 只需要一行代码，即可在您喜爱的框架中使用 AgentRun 的 Sandbox 及其他工具
+    # info-next-line
+    tools=[*sandbox_toolset(SANDBOX_NAME, template_type=TemplateType.BROWSER)],
+)
+
+async def invoke_agent(req: AgentRequest):
+    try:
+        converter = AgentRunConverter()
+
+        result = agent.astream_events(
+            {
+                "messages": [
+                    {"role": msg.role, "content": msg.content} for msg in req.messages
+                ]
+            },
+            config={"recursion_limit": 1000},
+        )
+        async for event in result:
+            for agentrun_event in converter.convert(event):
+                yield agentrun_event
+    except Exception as e:
+        print(e)
+        raise Exception("Internal Error")
+
+# info-next-line
+# 只需要一行代码，即可将开放 OpenAI Chat Completions / AG-UI 协议的 HTTP 服务，快速与其他项目集成
+# info-next-line
+AgentRunServer(invoke_agent=invoke_agent).start()
+```
+
+写入上述文件后，您的目录应该为如下形式
+
+```
+my-agentrun-python
+┣ .env                  # 配置的环境变量
+┣ .gitignore            # 配置需要忽略的文件
+┣ .venv                 # uv 的依赖目录
+┣ main.py               # 您的代码文件
+┗ requirements.txt      # 需要的依赖列表
+```
+
+</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+
+```js
+/**
+ * AgentRun Node.js - 极简实现
+ * 使用 @ag-ui/mastra 简化 AG-UI 协议处理
+ */
+import { createServer } from 'node:http';
+import { Agent } from '@mastra/core/agent';
+import { createTool } from '@mastra/core/tools';
+import { z } from 'zod';
+import { MastraAgent } from '@ag-ui/mastra';
+import { EventEncoder } from '@ag-ui/encoder';
+import { BrowserSandbox, ModelService } from '@agentrun/sdk';
+import { chromium } from 'playwright';
+
+// ============================================================================
+// 配置 & 全局状态
+// ============================================================================
+const PORT = parseInt(process.env.PORT || '9000', 10);
+const MODEL_SERVICE = process.env.MODEL_SERVICE || '';
+const MODEL_NAME = process.env.MODEL_NAME || 'qwen3-max';
+const SANDBOX_NAME = process.env.SANDBOX_NAME || '';
+
+let browser = null;
+let page = null;
+let sandbox = null;
+let template = null;
+let agent = null;
+
+// ============================================================================
+// Browser Sandbox 初始化
+// ============================================================================
+async function initBrowser() {
+  if (page) return page;
+
+  console.log('Initializing Browser Sandbox...');
+  // info-next-line
+  const sandbox = await BrowserSandbox.createFromTemplate(SANDBOX_NAME);
+  await sandbox.waitUntilRunning();
+
+  const cdpUrl = await sandbox.getCdpUrl();
+  browser = await chromium.connectOverCDP(cdpUrl);
+
+  const contexts = browser.contexts();
+  page = contexts[0]?.pages()[0] ?? (await browser.newContext()).newPage();
+  console.log('Browser Sandbox ready!');
+  return await page;
+}
+
+async function closeBrowser() {
+  if (browser) await browser.close();
+  if (sandbox) await sandbox.delete();
+  // if (template) await template.delete();
+  browser = page = null;
+  sandbox = template = null;
+}
+
+// ============================================================================
+// 浏览器工具（精简版）
+// ============================================================================
+const browserTools = {
+  browser_navigate: createTool({
+    id: 'browser_navigate',
+    description: 'Navigate to URL',
+    inputSchema: z.object({ url: z.string().url() }),
+    outputSchema: z.object({ url: z.string(), title: z.string() }),
+    execute: async ({ context }) => {
+      const p = await initBrowser();
+      await p.goto(context.url, { waitUntil: 'networkidle' });
+      return { url: p.url(), title: await p.title() };
+    },
+  }),
+
+  browser_evaluate: createTool({
+    id: 'browser_evaluate',
+    description: 'Execute JavaScript on page',
+    inputSchema: z.object({ script: z.string() }),
+    outputSchema: z.object({ result: z.unknown() }),
+    execute: async ({ context }) => {
+      const p = await initBrowser();
+      return { result: await p.evaluate(context.script) };
+    },
+  }),
+};
+
+async function initAgent() {
+  if (agent) return agent;
+
+  // info-next-line
+  const svc = await ModelService.get({ name: MODEL_SERVICE });
+  const info = await svc.modelInfo();
+
+  agent = new Agent({
+    id: 'search-agent',
+    name: 'Search Agent',
+    instructions: `
+你是 AgentRun 的 AI 助手，可以通过网络搜索帮助用户解决问题
+
+你的工作流程如下
+- 当用户向你提问概念性问题时，不要直接回答，而是先进行网络搜索
+- 使用 browser_navigate 工具打开百度搜索。如果要搜索 AgentRun，对应的搜索链接为: https://www.baidu.com/s?ie=utf-8&wd=agentrun。为了节省 token 使用，通过 browser_evaluate 获取你需要的部分
+- 获取百度搜索的结果，根据相关性分别打开子页面获取内容
+    - 如果子页面的相关度较低，则可以直接忽略
+    - 如果子页面的相关度较高，则将其记录为可参考的资料，记录页面标题和实时的 url
+- 当你获得至少 3 条网络信息后，可以结束搜索，并根据搜索到的结果回答用户的问题。
+- 如果某一部分回答引用了网络的信息，需要进行标注，并在回答的最后给出跳转链接`,
+    model: {
+      id: `openai/${info.model || MODEL_NAME}`,
+      url: info.baseUrl,
+      apiKey: info.apiKey,
+    },
+    tools: browserTools,
+  });
+
+  return agent;
+}
+
+// ============================================================================
+// HTTP 服务器
+// ============================================================================
+async function handleRequest(req, res) {
+  const url = new URL(req.url || '/', `http://localhost:${PORT}`);
+
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Accept, Authorization'
+  );
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    return res.end();
+  }
+
+  // 路由
+  if (url.pathname === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ status: 'ok' }));
+  }
+
+  if (url.pathname === '/openai/v1/models') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(
+      JSON.stringify({
+        object: 'list',
+        data: [
+          {
+            id: 'agentrun',
+            object: 'model',
+            created: (Date.now() / 1000) | 0,
+            owned_by: 'agentrun',
+          },
+        ],
+      })
+    );
+  }
+
+  if (
+    (url.pathname === '/ag-ui/agent' ||
+      url.pathname === '/openai/v1/chat/completions') &&
+    req.method === 'POST'
+  ) {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+
+    let input;
+    try {
+      input = JSON.parse(body);
+    } catch {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'Invalid JSON' }));
+    }
+
+    const userMsg = input.messages?.filter((m) => m.role === 'user').pop();
+    if (!userMsg) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'No user message' }));
+    }
+
+    console.log(`Request: "${userMsg.content.slice(0, 50)}..."`);
+
+    const isOpenAI = url.pathname.includes('openai');
+    const isStream = input.stream !== false;
+
+    try {
+      const agent = await initAgent();
+
+      if (isOpenAI && !isStream) {
+        // OpenAI 非流式
+        const result = await agent.generate(userMsg.content);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(
+          JSON.stringify({
+            id: `chatcmpl-${Date.now()}`,
+            object: 'chat.completion',
+            created: (Date.now() / 1000) | 0,
+            model: 'agentrun',
+            choices: [
+              {
+                index: 0,
+                message: { role: 'assistant', content: result.text || '' },
+                finish_reason: 'stop',
+              },
+            ],
+          })
+        );
+      }
+
+      // 流式响应
+      const encoder = new EventEncoder({
+        accept: req.headers.accept || 'text/event-stream',
+      });
+      res.writeHead(200, {
+        'Content-Type': isOpenAI
+          ? 'text/event-stream'
+          : encoder.getContentType(),
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      });
+
+      // 使用 MastraAgent 包装，自动转换为 AG-UI 事件
+      const agUIAgent = new MastraAgent({ agent, agentId: 'search-agent' });
+      const events$ = agUIAgent.run({
+        threadId: `thread-${Date.now()}`,
+        runId: `run-${Date.now()}`,
+        messages: input.messages,
+        tools: [], // 必须提供 tools 数组，否则 @ag-ui/mastra 会报错
+      });
+
+      // OpenAI 格式转换
+      let toolIdx = -1;
+      const toolMap = new Map();
+
+      events$.subscribe({
+        next: (event) => {
+          if (isOpenAI) {
+            const chunk = (delta, finish) => ({
+              id: `chatcmpl-${Date.now()}`,
+              object: 'chat.completion.chunk',
+              created: (Date.now() / 1000) | 0,
+              model: 'agentrun',
+              choices: [{ index: 0, delta, finish_reason: finish || null }],
+            });
+
+            switch (event.type) {
+              case 'TEXT_MESSAGE_START':
+                res.write(
+                  `data: ${JSON.stringify(chunk({ role: 'assistant' }))}\n\n`
+                );
+                break;
+              case 'TEXT_MESSAGE_CHUNK': // @ag-ui/mastra 使用这个事件类型
+              case 'TEXT_MESSAGE_CONTENT':
+                if (event.delta)
+                  res.write(
+                    `data: ${JSON.stringify(
+                      chunk({ content: event.delta })
+                    )}\n\n`
+                  );
+                break;
+              case 'TOOL_CALL_START':
+                toolIdx++;
+                toolMap.set(event.toolCallId, toolIdx);
+                res.write(
+                  `data: ${JSON.stringify(
+                    chunk({
+                      tool_calls: [
+                        {
+                          index: toolIdx,
+                          id: event.toolCallId,
+                          type: 'function',
+                          function: { name: event.toolCallName, arguments: '' },
+                        },
+                      ],
+                    })
+                  )}\n\n`
+                );
+                break;
+              case 'TOOL_CALL_ARGS':
+                const idx = toolMap.get(event.toolCallId) ?? 0;
+                res.write(
+                  `data: ${JSON.stringify(
+                    chunk({
+                      tool_calls: [
+                        {
+                          index: idx,
+                          function: { arguments: event.delta || '' },
+                        },
+                      ],
+                    })
+                  )}\n\n`
+                );
+                break;
+              case 'RUN_FINISHED':
+                res.write(
+                  `data: ${JSON.stringify(
+                    chunk({}, toolIdx >= 0 ? 'tool_calls' : 'stop')
+                  )}\n\n`
+                );
+                res.write('data: [DONE]\n\n');
+                break;
+            }
+          } else {
+            res.write(encoder.encode(event));
+          }
+        },
+        error: (err) => {
+          console.error('Stream error:', err);
+          if (isOpenAI) {
+            res.write(
+              `data: ${JSON.stringify({
+                error: { message: err.message, type: 'internal_error' },
+              })}\n\n`
+            );
+          } else {
+            res.write(
+              encoder.encode({ type: 'RUN_ERROR', message: err.message })
+            );
+          }
+          res.end();
+        },
+        complete: () => res.end(),
+      });
+    } catch (err) {
+      console.error('Error:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  res.writeHead(404, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: 'Not Found' }));
+}
+
+const server = createServer(handleRequest);
+
+process.on('SIGINT', async () => {
+  console.log('\nShutting down...');
+  await closeBrowser();
+  server.close(() => process.exit(0));
+});
+
+server.listen(PORT, () => {
+  console.log(`
+========================================
+AgentRun Server
+========================================
+AG-UI:  http://127.0.0.1:${PORT}/ag-ui/agent
+OpenAI: http://127.0.0.1:${PORT}/openai/v1/chat/completions
+Health: http://127.0.0.1:${PORT}/health
+`);
+});
+```
+
+
+写入上述文件后，您的目录应该为如下形式
+
+```
+my-agentrun-python
+┣ .env                  # 配置的环境变量
+┣ .gitignore            # 配置需要忽略的文件
+┣ node_modules          # js 的依赖目录
+┣ index.js              # 您的代码文件
+┗ package.json          # 需要的依赖列表
+```
+
+:::info 注意
+目前 NodeJS 的框架集成仍在开发中，因此相较于 Python 版本代码量会更多（仍然需要手动和框架集成）
+
+我们会尽快完善该部分内容，提升 NodeJS 的开发体验
+:::
+
+</TabItem></Tabs>
+
+## 本地执行测试
+
+启动项目后，您可以使用 AG-UI 协议进行调用（使用 AG-UI 可以详细看到工具调用的过程，更加友好）
+
+<details>
+<summary>调用示例</summary>
+
+参考如下调用示例，可以看到大模型在网络上搜索，并通过自己的能力删减 tool call 返回值避免 token 爆炸，并最终给出总结
+
+```bash
+curl 127.0.0.1:9000/ag-ui/agent -H "content-type: application/json" -d '{"messages":[{"role":"user", "content": "什么是 a2a"}]}'
+
+data: {"type":"RUN_STARTED","threadId":"3fcd6aed-bbbb-4cbd-b14c-f43a25f02e27","runId":"9cc1bf23-8289-4df6-a257-dd271b4772de"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_eed285ab6bd64aea980c6a21","toolCallName":"health"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_eed285ab6bd64aea980c6a21","delta":""}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_eed285ab6bd64aea980c6a21"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_eed285ab6bd64aea980c6a21","toolCallId":"call_eed285ab6bd64aea980c6a21","content":"{\"status\": \"ok\", \"services\": {\"cdp_websocket\": {\"status\": \"ok\", \"message\": \"CDP WebSocket service ready, 0 active connections\"}, \"vnc_websocket\": {\"status\": \"ok\", \"message\": \"VNC server accessible\"}}}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_51e1dc38f8544d0c83b6c803","toolCallName":"goto"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_51e1dc38f8544d0c83b6c803","delta":"{\"url\": \"https://www.baidu.com/s?ie=utf-8&wd=a2a\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_51e1dc38f8544d0c83b6c803"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_51e1dc38f8544d0c83b6c803","toolCallId":"call_51e1dc38f8544d0c83b6c803","content":"{\"url\": \"https://www.baidu.com/s?ie=utf-8&wd=a2a\", \"success\": true, \"status\": 200}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_aea14c318731430485a10e82","toolCallName":"evaluate"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_aea14c318731430485a10e82","delta":"{\"expression\": \"Array.from(document.querySelectorAll('.c-container')).slice(0, 5).map(item => { const titleEl = item.querySelector('h3') || item.querySelector('.content-title'); const linkEl = item.querySelector('a'); return { title: titleEl?.innerText.trim() || '', url: linkEl?.href || '' }; }).filter(item => item.title && item.url)\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_aea14c318731430485a10e82"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_aea14c318731430485a10e82","toolCallId":"call_aea14c318731430485a10e82","content":"{\"result\": [{\"title\": \"a2a\\n\\n - 百度图片\", \"url\": \"https://image.baidu.com/search/index?tn=baiduimage&ct=201326592&lm=-1&cl=2&ie=utf8&sa=vs_ala_img&fr=ala&ala=1&alatpl=normal&pos=3&dyTabStr=MCwzLDEsMiwxMyw3LDYsNSwxMiw5&word=a2a&lid=a70b2bb30048809a&topic=a2a\"}, {\"title\": \"A2A超话—新浪微博超话社区\", \"url\": \"http://www.baidu.com/link?url=KceEJNAvs0xT2nDqwfaJlTC2szI4FTGxuKRCjUERJyAcp-ccEUNOa6upVrtMx9vM6q571tysS-pLHn8XArHYtHgngUFGPf6JpusP54k_fv3\"}, {\"title\": \"A2A - 百度百科\", \"url\": \"http://www.baidu.com/link?url=2byj0MG4tI7XgwYRIrqxIZkMTFQZhYL6GrJtfyli-5tjVLL7qtZTziZMA_PBi7Vx2-hb28hNDv_1Qmpk2kDGJ_\"}, {\"title\": \"a2a - 视频大全 - 高清在线观看\", \"url\": \"https://www.baidu.com/sf/vsearch?pd=video&wd=a2a&tn=vsearch&lid=a70b2bb30048809a&ie=utf-8&rsv_pq=a70b2bb30048809a&rsv_spt=5&rsv_bp=1&f=8&atn=index\"}]}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_303cb2010c03435d8a2aca1a","toolCallName":"goto"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_303cb2010c03435d8a2aca1a","delta":"{\"url\": \"http://www.baidu.com/link?url=2byj0MG4tI7XgwYRIrqxIZkMTFQZhYL6GrJtfyli-5tjVLL7qtZTziZMA_PBi7Vx2-hb28hNDv_1Qmpk2kDGJ_\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_303cb2010c03435d8a2aca1a"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_303cb2010c03435d8a2aca1a","toolCallId":"call_303cb2010c03435d8a2aca1a","content":"{\"url\": \"http://www.baidu.com/link?url=2byj0MG4tI7XgwYRIrqxIZkMTFQZhYL6GrJtfyli-5tjVLL7qtZTziZMA_PBi7Vx2-hb28hNDv_1Qmpk2kDGJ_\", \"success\": true, \"status\": 200}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_683ef02efe1a439893210e6c","toolCallName":"evaluate"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_683ef02efe1a439893210e6c","delta":"{\"expression\": \"({ title: document.title, content: Array.from(document.querySelectorAll('meta[name=\\\"description\\\"], .lemma-summary, .content')).map(el => el.content || el.innerText).join(' ') })\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_683ef02efe1a439893210e6c"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_683ef02efe1a439893210e6c","toolCallId":"call_683ef02efe1a439893210e6c","content":"{\"result\": {\"title\": \"A2A_百度百科\", \"content\": \"A2A是区域对区域（area to area）的英文缩写，中文亦称“中心对中心”，指两个区域性社区（如小区、校园等）之间建立的联系与关系。该概念区别于B2B（企业对企业）、B2C（商家对客户）、C2C（个人对个人）等电子商务模式。A2A通常与A2B（区域对企业）、A2C（区域对个人）共同构成区域导向的商务分类体系。其应用场景聚焦于需实地体验的线下实体服务场所，例如酒吧、KTV、餐馆等业态，强调消费者必须到线下场所才能完成服务消费的特性。该术语的提出拓展了传统电子商务模式的分类维度，通过与O2O（线上对线下）模式的对比，突出了区域性单元在商务活动中的地理属性。\"}}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_0d17b293922a4b6e9c1e08f3","toolCallName":"goto"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_0d17b293922a4b6e9c1e08f3","delta":"{\"url\": \"https://www.baidu.com/s?ie=utf-8&wd=a2a%20人工智能\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_0d17b293922a4b6e9c1e08f3"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_0d17b293922a4b6e9c1e08f3","toolCallId":"call_0d17b293922a4b6e9c1e08f3","content":"{\"url\": \"https://www.baidu.com/s?ie=utf-8&wd=a2a%20人工智能\", \"success\": true, \"status\": 200}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_71cfe08ae62f44bba42db04b","toolCallName":"evaluate"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_71cfe08ae62f44bba42db04b","delta":"{\"expression\": \"Array.from(document.querySelectorAll('.c-container')).slice(0, 5).map(item => { const titleEl = item.querySelector('h3') || item.querySelector('.content-title'); const linkEl = item.querySelector('a'); return { title: titleEl?.innerText.trim() || '', url: linkEl?.href || '' }; }).filter(item => item.title && item.url)\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_71cfe08ae62f44bba42db04b"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_71cfe08ae62f44bba42db04b","toolCallId":"call_71cfe08ae62f44bba42db04b","content":"{\"result\": [{\"title\": \"MCP 与 A2A 协议比较:人工智能系统互联与协作的技术基础架构\", \"url\": \"http://www.baidu.com/link?url=cBDuVw8UrsyD2IhhRNX6TppDcPvP9P3SKoWXxcN9RoM3xcAPOyVzUxpQ4brCTCov\"}, {\"title\": \"A2A技术深度解析:让AI智能体像人类一样协作_a2as 框架-CSDN博客\", \"url\": \"http://www.baidu.com/link?url=jnVSHNqRN_dOSSCxnF90Of4S-xc9fiBEj0ETLhNTHNeB4NGw3q8mxf6kLGrYTaoNoWZSuO4A3EtVOVDVYYDfLPqHPMzW1TDb1t8LCmBd9PW\"}, {\"title\": \"A2A+MCP构建智能体协作生态:下一代分布式人工智能架构解析_a2a框架...\", \"url\": \"http://www.baidu.com/link?url=GR0rQp41J1dU5vOQmbao_l9SrDWNPAJRIApwA_YxiKjIVrlIbTUMV-B33FULtanQmuzzANw8A_8i4nebsJu1NCE9mexqg3v9JgSVuEwr1iW\"}]}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_673c4e12d07f47c88af9a94e","toolCallName":"goto"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_673c4e12d07f47c88af9a94e","delta":"{\"url\": \"http://www.baidu.com/link?url=cBDuVw8UrsyD2IhhRNX6TppDcPvP9P3SKoWXxcN9RoM3xcAPOyVzUxpQ4brCTCov\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_673c4e12d07f47c88af9a94e"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_673c4e12d07f47c88af9a94e","toolCallId":"call_673c4e12d07f47c88af9a94e","content":"{\"url\": \"http://www.baidu.com/link?url=cBDuVw8UrsyD2IhhRNX6TppDcPvP9P3SKoWXxcN9RoM3xcAPOyVzUxpQ4brCTCov\", \"success\": true, \"status\": 200}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_ab12e47e057b4ce3b2d2bc74","toolCallName":"evaluate"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_ab12e47e057b4ce3b2d2bc74","delta":"{\"expression\": \"({ title: document.title, content: Array.from(document.querySelectorAll('meta[name=\\\"description\\\"], p, .content')).map(el => el.content || el.innerText).join(' ').substring(0, 500) })\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_ab12e47e057b4ce3b2d2bc74"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_ab12e47e057b4ce3b2d2bc74","toolCallId":"call_ab12e47e057b4ce3b2d2bc74","content":"{\"result\": {\"title\": \"MCP 与 A2A 协议比较：人工智能系统互联与协作的技术基础架构 - 极术社区 - 连接开发者与智能计算生态\", \"content\": \"在人工智能领域的快速迭代发展中，两种协议已成为构建新一代 AI 系统的关键基础设施：模型上下文协议（Model Context Protocol，MCP）和代理对代理协议（Agent-to-Agent Protocol，A2A）。表面上这两种协议可能存在相似之处，但它们在设计目标和应用场景上有着明确区分，并正在根本性地重塑 AI 系统与环境及相互之间的交... 在人工智能领域的快速迭代发展中，两种协议已成为构建新一代 AI 系统的关键基础设施：模型上下文协议（Model Context Protocol，MCP）和代理对代理协议（Agent-to-Agent Protocol，A2A）。表面上这两种协议可能存在相似之处，但它们在设计目标和应用场景上有着明确区分，并正在根本性地重塑 AI 系统与环境及相互之间的交互方式。  模型上下文协议由 Anthropic 开发，其核心功能是作为 AI 模型与外部工具、数据源和系统间的标准化接口。MCP 可视为一种通用适配层，使 AI 应用能够连接到多种外部资源，无需针对每一种资源单独开发定制化集成方案。 从技术架构角度看，MCP 有效地将传统的\\\"M\"}}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_ea49e7ef7aec4390a47f3697","toolCallName":"goto"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_ea49e7ef7aec4390a47f3697","delta":"{\"url\": \"http://www.baidu.com/link?url=jnVSHNqRN_dOSSCxnF90Of4S-xc9fiBEj0ETLhNTHNeB4NGw3q8mxf6kLGrYTaoNoWZSuO4A3EtVOVDVYYDfLPqHPMzW1TDb1t8LCmBd9PW\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_ea49e7ef7aec4390a47f3697"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_ea49e7ef7aec4390a47f3697","toolCallId":"call_ea49e7ef7aec4390a47f3697","content":"{\"error\": \"Page.goto: Timeout 30000ms exceeded.\\nCall log:\\n  - navigating to \\\"http://www.baidu.com/link?url=jnVSHNqRN_dOSSCxnF90Of4S-xc9fiBEj0ETLhNTHNeB4NGw3q8mxf6kLGrYTaoNoWZSuO4A3EtVOVDVYYDfLPqHPMzW1TDb1t8LCmBd9PW\\\", waiting until \\\"load\\\"\\n\"}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_0b3f2ad0f92f4adda22a28ba","toolCallName":"goto"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_0b3f2ad0f92f4adda22a28ba","delta":"{\"url\": \"https://www.baidu.com/s?ie=utf-8&wd=a2a%20Agent-to-Agent\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_0b3f2ad0f92f4adda22a28ba"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_0b3f2ad0f92f4adda22a28ba","toolCallId":"call_0b3f2ad0f92f4adda22a28ba","content":"{\"url\": \"https://www.baidu.com/s?ie=utf-8&wd=a2a%20Agent-to-Agent\", \"success\": true, \"status\": 200}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_799dba0d4fb84b9e8531a1e7","toolCallName":"evaluate"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_799dba0d4fb84b9e8531a1e7","delta":"{\"expression\": \"Array.from(document.querySelectorAll('.c-container')).slice(0, 5).map(item => { const titleEl = item.querySelector('h3') || item.querySelector('.content-title'); const linkEl = item.querySelector('a'); return { title: titleEl?.innerText.trim() || '', url: linkEl?.href || '' }; }).filter(item => item.title && item.url)\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_799dba0d4fb84b9e8531a1e7"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_799dba0d4fb84b9e8531a1e7","toolCallId":"call_799dba0d4fb84b9e8531a1e7","content":"{\"result\": [{\"title\": \"Agent-to-Agent(A2A)协议:基础教程 - 知乎\", \"url\": \"http://www.baidu.com/link?url=Hd7npHiqNL5qNdKtSxBmyW2g-SYhYFwhDQ1Y1Td0_6mvzMdWfQ8etM0Lq9q0KkHYSe63qJTOMcSfBEn5Rj9C_a\"}, {\"title\": \"Agent-to-Agent (A2A) 协议 | Technology Radar | Thoughtworks...\", \"url\": \"http://www.baidu.com/link?url=-VkpnaBwIG8JH5td8RfXC3KXNVqOm7A5O79AXyW_5ybyL5avYZNQLsIlxeVlI4AR4Kfh2yaz-Z4CRdDqhjSLhkzEtXqs1ei9ZnB2dGphotMfOxqMSZ_3np0HHJ_Hvdga\"}, {\"title\": \"多Agent协作入门:基于A2A协议的Agent通信(中) - ExplorerMan...\", \"url\": \"http://www.baidu.com/link?url=jLUnMCuC7_w5Zny-oOm9_lh5HOR8BaljRufeWOPhEFQGFrCDKpm3TjdxKTpDhSVTsbNS3giuZ0P9EVtSZGjumK\"}]}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_4c52fae9c82a4953a31e47ae","toolCallName":"goto"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_4c52fae9c82a4953a31e47ae","delta":"{\"url\": \"http://www.baidu.com/link?url=Hd7npHiqNL5qNdKtSxBmyW2g-SYhYFwhDQ1Y1Td0_6mvzMdWfQ8etM0Lq9q0KkHYSe63qJTOMcSfBEn5Rj9C_a\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_4c52fae9c82a4953a31e47ae"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_4c52fae9c82a4953a31e47ae","toolCallId":"call_4c52fae9c82a4953a31e47ae","content":"{\"url\": \"http://www.baidu.com/link?url=Hd7npHiqNL5qNdKtSxBmyW2g-SYhYFwhDQ1Y1Td0_6mvzMdWfQ8etM0Lq9q0KkHYSe63qJTOMcSfBEn5Rj9C_a\", \"success\": true, \"status\": 403}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_0a11b10f87eb4cf08d62c943","toolCallName":"goto"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_0a11b10f87eb4cf08d62c943","delta":"{\"url\": \"http://www.baidu.com/link?url=-VkpnaBwIG8JH5td8RfXC3KXNVqOm7A5O79AXyW_5ybyL5avYZNQLsIlxeVlI4AR4Kfh2yaz-Z4CRdDqhjSLhkzEtXqs1ei9ZnB2dGphotMfOxqMSZ_3np0HHJ_Hvdga\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_0a11b10f87eb4cf08d62c943"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_0a11b10f87eb4cf08d62c943","toolCallId":"call_0a11b10f87eb4cf08d62c943","content":"{\"url\": \"http://www.baidu.com/link?url=-VkpnaBwIG8JH5td8RfXC3KXNVqOm7A5O79AXyW_5ybyL5avYZNQLsIlxeVlI4AR4Kfh2yaz-Z4CRdDqhjSLhkzEtXqs1ei9ZnB2dGphotMfOxqMSZ_3np0HHJ_Hvdga\", \"success\": true, \"status\": 200}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_b9151c91db0642279b823553","toolCallName":"evaluate"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_b9151c91db0642279b823553","delta":"{\"expression\": \"({ title: document.title, content: Array.from(document.querySelectorAll('meta[name=\\\"description\\\"], p, .content')).map(el => el.content || el.innerText).join(' ').substring(0, 500) })\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_b9151c91db0642279b823553"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_b9151c91db0642279b823553","toolCallId":"call_b9151c91db0642279b823553","content":"{\"result\": {\"title\": \"Agent-to-Agent (A2A) 协议 | Technology Radar | Thoughtworks China\", \"content\": \"Agent2Agent (A2A) 是一个协议，定义了复杂、多智能体工作流中智能体之间通信和交互的标准。它使用 Agent Cards 描述智能体间通信的关键元素，包括技能发现和传输及安全方案的规范。A2A 通过专注于智能体间通信，而不暴露内部细节（如智能体状态、记忆或内部），这成为了对 模型上下文协议 (MCP)的一个补充。\\n该协议提倡最佳实践，例如对长时间运行的任务采用异步优先方法，对增量更新采用流式响应，以及使用 HTTPS、身份验证和授权进行安全传输。为了方便快速采用，A2A 提供了 Python、JavaScript、Java 和 C# 的 SDK。尽管 A2A 相对较新，但它使团队能够构建特定领域的代理，这些代理可以协作形成复杂的工作流，使其成为此类场景的理想选择。 [...]  针对当今科技领域发展的前沿指南 服务数字读者的出版物 业务主管的A-Z技术指南 聚焦技术引领的商业变革 助力商业的专业洞见 关于战略、人工智能, 工程、技术生涯等方面的专家建议 浏览更多我们的书籍 分析商业和技术最新趋势的精彩对话 探索最新科技热点，深度分析技术与商业 面试准备 了解作为一名Tho\"}}","role":"tool"}
+
+data: {"type":"TEXT_MESSAGE_START","messageId":"b28f14e6-d3e3-4175-b039-84d8186c129d","role":"assistant"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"b28f14e6-d3e3-4175-b039-84d8186c129d","delta":"A2A 有两种主要含义，具体取决于上下文：\n\n## 1. 区域对区域（Area to Area）\n在传统商务和电子商务领域，A2A 是 \"Area to Area\"（区域对区域）的缩写，也称为\"中心对中心\"。这个概念指的是：\n- 两个区域性社区（如小区、校园等）之间建立的联系与关系\n- 区别于传统的 B2B（企业对企业）、B2C（商家对客户）、C2C（个人对个人）等电子商务模式\n- 通常与 A2B（区域对企业）、A2C（区域对个人）共同构成区域导向的商务分类体系\n- 主要应用于需要实地体验的线下实体服务场所，如酒吧、KTV、餐馆等业态\n\n## 2. 智能体对智能体（Agent-to-Agent）\n在人工智能和新兴技术领域，A2A 指的是 \"Agent-to-Agent\"（智能体对智能体）协议：\n- 这是一个定义复杂、多智能体工作流中智能体之间通信和交互标准的协议\n- 使用 Agent Cards 描述智能体间通信的关键元素，包括技能发现、传输及安全方案规范\n- 专注于智能体间通信，而不暴露内部细节（如智能体状态、记忆或内部结构）\n- 提倡最佳实践，如对长时间运行任务采用异步优先方法，对增量更新采用流式响应\n- 提供 Python、JavaScript、Java 和 C# 的 SDK 以方便快速采用\n- 与模型上下文协议（MCP）形成互补关系\n\n这两种含义分别代表了不同领域的概念，需要根据具体语境来判断所指的内容。\n\n参考资料：\n- [A2A_百度百科](http://www.baidu.com/link?url=2byj0MG4tI7XgwYRIrqxIZkMTFQZhYL6GrJtfyli-5tjVLL7qtZTziZMA_PBi7Vx2-hb28hNDv_1Qmpk2kDGJ_)\n- [MCP 与 A2A 协议比较：人工智能系统互联与协作的技术基础架构](http://www.baidu.com/link?url=cBDuVw8UrsyD2IhhRNX6TppDcPvP9P3SKoWXxcN9RoM3xcAPOyVzUxpQ4brCTCov)\n- [Agent-to-Agent (A2A) 协议 | Technology Radar | Thoughtworks China](http://www.baidu.com/link?url=-VkpnaBwIG8JH5td8RfXC3KXNVqOm7A5O79AXyW_5ybyL5avYZNQLsIlxeVlI4AR4Kfh2yaz-Z4CRdDqhjSLhkzEtXqs1ei9ZnB2dGphotMfOxqMSZ_3np0HHJ_Hvdga)"}
+
+data: {"type":"TEXT_MESSAGE_END","messageId":"b28f14e6-d3e3-4175-b039-84d8186c129d"}
+
+data: {"type":"RUN_FINISHED","threadId":"3fcd6aed-bbbb-4cbd-b14c-f43a25f02e27","runId":"9cc1bf23-8289-4df6-a257-dd271b4772de"}
+```
+
+> A2A 有两种主要含义，具体取决于上下文：
+>
+> **1. 区域对区域（Area to Area）**
+>
+> 在传统商务和电子商务领域，A2A 是 \"Area to Area\"（区域对区域）的缩写，也称为\"中心对中心\"。这个概念指的是：
+>
+> - 两个区域性社区（如小区、校园等）之间建立的联系与关系
+> - 区别于传统的 B2B（企业对企业）、B2C（商家对客户）、C2C（个人对个人）等电子商务模式
+> - 通常与 A2B（区域对企业）、A2C（区域对个人）共同构成区域导向的商务分类体系
+> - 主要应用于需要实地体验的线下实体服务场所，如酒吧、KTV、餐馆等业态
+>
+> **2. 智能体对智能体（Agent-to-Agent）**
+>
+> 在人工智能和新兴技术领域，A2A 指的是 \"Agent-to-Agent\"（智能体对智能体）协议：
+>
+> - 这是一个定义复杂、多智能体工作流中智能体之间通信和交互标准的协议
+> - 使用 Agent Cards 描述智能体间通信的关键元素，包括技能发现、传输及安全方案规范
+> - 专注于智能体间通信，而不暴露内部细节（如智能体状态、记忆或内部结构）
+> - 提倡最佳实践，如对长时间运行任务采用异步优先方法，对增量更新采用流式响应
+> - 提供 Python、JavaScript、Java 和 C# 的 SDK 以方便快速采用
+> - 与模型上下文协议（MCP）形成互补关系
+>
+> 这两种含义分别代表了不同领域的概念，需要根据具体语境来判断所指的内容。
+>
+> 参考资料：
+>
+> - [A2A\_百度百科](http://www.baidu.com/link?url=2byj0MG4tI7XgwYRIrqxIZkMTFQZhYL6GrJtfyli-5tjVLL7qtZTziZMA_PBi7Vx2-hb28hNDv_1Qmpk2kDGJ_)
+> - [MCP 与 A2A 协议比较：人工智能系统互联与协作的技术基础架构](http://www.baidu.com/link?url=cBDuVw8UrsyD2IhhRNX6TppDcPvP9P3SKoWXxcN9RoM3xcAPOyVzUxpQ4brCTCov)
+> - [Agent-to-Agent (A2A) 协议 | Technology Radar | Thoughtworks China](http://www.baidu.com/link?url=-VkpnaBwIG8JH5td8RfXC3KXNVqOm7A5O79AXyW_5ybyL5avYZNQLsIlxeVlI4AR4Kfh2yaz-Z4CRdDqhjSLhkzEtXqs1ei9ZnB2dGphotMfOxqMSZ_3np0HHJ_Hvdga)
+
+</details>
+
+
+:::warning
+Sandbox 的生命周期与业务密切相关，因此我们未对 Sandbox 的生命周期进行管理。
+
+默认情况下 Sandbox 会在 **无操作 30 分钟** 或 **创建 6 小时** 后自动销毁。
+
+如果您在本地测试代码，可能会初始化大量的 Sandbox 实例，这将会产生一定的费用，建议您增加 sandbox 的清理逻辑，或手动执行清理。
+:::
+
+## 将 Agent 部署到云上 AgentRun
+
+### 云上依赖安装
+
+要将 Agent 部署到云上，首先需要解决的问题是依赖兼容问题。云上为 Linux x64 环境，而大部分用户的本地可能是 Windows x64 或 Mac arm64 环境，不同的环境所需要的依赖不完全一致。
+
+为了解决依赖问题，我们有如下建议
+
+- 通过 `s build` 在本地下载 Linux x64 依赖（需要安装 Serverless Devs 和 docker）
+- 构建 Docker 镜像，使用自定义镜像部署
+
+在这里，为了简化操作，我们使用 `s build` 完成任务，这需要您安装 Serverless Devs 和 Docker
+
+#### 安装 Serverless Devs
+
+<PartInstallS />
+
+#### 安装 Docker
+
+依赖安装仅需要使用函数计算官方镜像执行依赖安装行为，因此您可以用任意兼容 docker 命令的容器环境作为替代
+
+- [Docker Desktop](https://docs.docker.com/get-started/introduction/get-docker-desktop/)
+- [Podman](https://podman.io/docs/installation)
+- [Lima](https://github.com/lima-vm/lima)
+
+#### 配置 s.yaml 并执行安装
+
+执行本地依赖安装需要首先存在 `requirements.txt` 或 `packages.json`，这些文件在前面的步骤中应该已经存在
+
+同时，您还需要写入一个 `s.yaml` 文件，作为 Serverless Devs 的配置文件
+
+对于 `s.yaml` 中，存在 `vars.role` 字段，该字段需要填写您的 RAM 角色，用来获取执行期间的临时阿里云 ACCESS_KEY
+
+快速创建 RAM 角色可以参考:
+> <PartRole />
+
+<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+
+```yaml [title="s.yaml"]
+edition: 3.0.0
+name: my-agentrun
+# info-start
+# 您需要根据实际情况修改这里的内容
+access: 'default' # 修改为您的密钥对名称
+vars:
+  region: 'cn-hangzhou' # 要部署的地域
+  agent_name: 'my-agentrun-python' # 您的 Agent 名称
+  role: 'acs:ram::${config("AccountID")}:role/AliyunAgentRunDefaultRole' # 您的 Agent 需要拥有的权限（会用于注入 ACCESS_KEY）
+  model_service: 'my-agentrun-model' # AgentRun 模型服务名称
+  model_name: 'qwen3-max' # 要使用的模型名称
+  sandbox_name: 'my-agentrun-browser' # 浏览器沙箱名称
+  # info-end
+
+resources:
+  agent:
+    component: agentrun
+    props:
+      region: ${vars.region}
+
+      agent:
+        # 基本信息
+        name: ${vars.agent_name}
+        description: '我的 AgentRun Agent'
+        role: ${vars.role}
+        code:
+          src: ./
+          # highlight-next-line
+          language: python3.12
+          command:
+            - python3
+            - main.py
+
+        # 资源配置
+        cpu: 1.0
+        memory: 2048
+
+        # 端口和并发
+        port: 9000
+        instanceConcurrency: 200
+
+        # 网络配置 - 仅公网访问
+        internetAccess: true
+
+        # 环境变量
+        environmentVariables:
+            # highlight-next-line
+          PYTHONPATH: /code/python:/opt/python:/code:/code/python
+
+          MODEL_SERVICE: '${vars.model_service}'
+          MODEL_NAME: '${vars.model_name}'
+          SANDBOX_NAME: '${vars.sandbox_name}'
+
+        # 日志配置
+        logConfig: auto
+
+        # 端点配置
+        endpoints:
+          - name: prod
+            version: LATEST
+            description: '生产环境端点'
+```
+
+此时，执行 `s build` 则会自动拉取函数计算使用的运行镜像，并在其中安装依赖，依赖会被安装到 `python` 目录（这也意味着，您的代码需要能够识别 python 目录的依赖，这已经通过 `PYTHONPATH` 配置）
+
+</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+
+```yaml [title="s.yaml"]
+edition: 3.0.0
+name: my-agentrun
+# info-start
+# 您需要根据实际情况修改这里的内容
+access: 'default' # 修改为您的密钥对名称
+vars:
+  region: 'cn-hangzhou' # 要部署的地域
+  agent_name: 'my-agentrun-nodejs' # 您的 Agent 名称
+  role: 'acs:ram::${config("AccountID")}:role/AliyunAgentRunDefaultRole' # 您的 Agent 需要拥有的权限（会用于注入 ACCESS_KEY）
+  model_service: 'my-agentrun-model' # AgentRun 模型服务名称
+  model_name: 'qwen3-max' # 要使用的模型名称
+  sandbox_name: 'my-agentrun-browser' # 浏览器沙箱名称
+  # info-end
+
+resources:
+  agent:
+    component: agentrun
+    props:
+      region: ${vars.region}
+
+      agent:
+        # 基本信息
+        name: ${vars.agent_name}
+        description: '我的 AgentRun Agent'
+        role: ${vars.role}
+        code:
+          src: ./
+          # highlight-next-line
+          language: nodejs20
+          command:
+            - node
+            - index.js
+
+        # 资源配置
+        cpu: 1.0
+        memory: 2048
+
+        # 端口和并发
+        port: 9000
+        instanceConcurrency: 200
+
+        # 网络配置 - 仅公网访问
+        internetAccess: true
+
+        # 环境变量
+        environmentVariables:
+          MODEL_SERVICE: '${vars.model_service}'
+          MODEL_NAME: '${vars.model_name}'
+          SANDBOX_NAME: '${vars.sandbox_name}'
+
+        # 日志配置
+        logConfig: auto
+
+        # 端点配置
+        endpoints:
+          - name: prod
+            version: LATEST
+            description: '生产环境端点'
+
+```
+
+此时，执行 `s build` 则会自动拉取函数计算使用的运行镜像，并在其中安装依赖，依赖会被安装到 `node_modules` 目录。
+
+:::warning
+由于本地运行也依赖于 `node_modules` 目录，安装 Linux x64 依赖可能会导致本地后续无法运行（取决于是否存在冲突问题）
+
+您可以将 `s build` 步骤放在您的发布流水线中执行，避免影响本地的逻辑
+:::
+
+</TabItem></Tabs>
+
+更多 `s build` 的细节，可以参考 [Serverless Devs Build 命令](https://serverless-devs.com/docs/user-guide/aliyun/fc/command/build/)
+
+### 部署到云上
+
+部署前，我们还需要排除 `.env` 文件和不必要的文件，将代码包压缩至最小
+
+<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+
+```bash [title=".fcignore"]
+.env
+.venv
+```
+
+</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+
+```bash [title=".fcignore"]
+.env
+```
+
+</TabItem></Tabs>
+
+由于前面我们已经写好了 `s.yaml` 文件，因此您只需要执行部署命令，即可快速将 Agent 部署到 AgentRun 中
+
+```bash
+s deploy
+```
+
+检查部署的输出内容，可以看到部署结果中存在 url
+
+```
+endpoints:
+    -
+      id:          99015cc9-b0d6-454c-a71b-9500d1179d93
+      arn:         acs:agentrun:cn-hangzhou:1431********149:runtime-endpoints/99015cc9-b0d6-454c-a71b-9500d1179d93
+      name:        prod
+      // highlight-next-line
+      url:         https://1431********149.agentrun-data.cn-hangzhou.aliyuncs.com/agent-runtimes/m**********n/endpoints/prod/invocations
+      version:     LATEST
+      status:      CREATING
+      description: 生产环境端点
+```
+
+这个地址就是您的 Agent 访问地址，这次我们使用 OpenAI Chat Completions 协议快速执行一次会话
+
+```bash
+curl https://1431********149.agentrun-data.cn-hangzhou.aliyuncs.com/agent-runtimes/m**********n/endpoints/prod/invocations/openai/v1/chat/completions \
+    -H "content-type: application/json" \
+    -d '{"messages": [{"role":"user", "content":"你好，你是谁？"}]}'
+```
+
+如果一切正常，那么返回值应该类似
+
+> 我是 AgentRun 的 AI 助手，可以通过网络搜索帮助您解决问题。如果您有任何问题需要查询，请告诉我！我是 AgentRun 的 AI 助手，可以通过网络搜索帮助您解决问题。如果您有任何问题需要查询，请告诉我！
+
+:::success 🎉 恭喜
+您已经在 AgentRun 成功执行了一次端到端的部署，接下来您可以继续改进代码，让 Agent 支持更丰富的功能。
+
+- 您可以使用 AG-UI 测试云上的浏览器能力
+- 您可以为您的 Agent 增加一个前端页面，让浏览器的执行过程实时渲染给用户
+- 您可以调整提示词，让 Agent 调查更有倾向性（如针对性在 知乎、小红书 进行检索）
+  :::

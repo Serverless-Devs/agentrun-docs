@@ -1,0 +1,117 @@
+---
+sidebar_position: 1
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import PartialEnv from '../_partial/_config.mdx';
+
+# 安装与配置
+
+## 环境要求
+
+AgentRun Python SDK 要求 Python 版本在 3.10 或更高。建议使用虚拟环境来管理项目依赖，避免与系统 Python 环境产生冲突。您可以使用 venv、virtualenv 或 conda 等工具创建虚拟环境。
+
+在安装 SDK 之前，请确保您已拥有阿里云账号，并已开通 AgentRun 服务。您需要准备好阿里云的 Access Key ID、Access Key Secret 和账号 ID，这些凭证将用于 SDK 与云端服务的认证。
+
+## 安装依赖
+
+使用包管理器可以快速安装 AgentRun SDK。在终端中执行以下命令即可完成基础安装：
+
+<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+
+```bash
+pip install agentrun-sdk
+```
+
+:::info 配置镜像
+可以通过配置 PyPI 镜像，更快地安装依赖
+
+```bash
+pip install agentrun-sdk -i http://mirrors.aliyun.com/pypi/simple/
+```
+
+:::
+
+:::warning
+要求 Python 3.10 或更高版本。
+:::
+
+:::note 安装可选依赖
+AgentRun SDK 采用模块化设计，将不同的功能特性作为可选依赖项提供。这样可以避免安装不必要的依赖包，减小环境体积。根据您的实际需求，可以选择安装以下可选依赖：
+
+- **`server`**: 依赖用于启用 HTTP 服务器功能。如果您需要使用 AgentRunServer 将 Agent 封装为 HTTP API，需要安装此依赖。该依赖包含 FastAPI 和 Uvicorn 等 Web 框架组件。
+- **`playwright`**: 依赖用于支持浏览器沙箱功能。当您需要让 Agent 进行网页自动化操作时，需要安装此依赖。安装后还需要运行 Playwright 的初始化命令来下载浏览器驱动。
+- **`mcp`**: 依赖用于支持 MCP（Model Context Protocol）工具集。如果您的 Agent 需要调用基于 MCP 协议的工具服务，需要安装此依赖。
+- 框架集成依赖: 包括 **`langchain`**、**`agentscope`**、**`google-adk`**、**`crewai`**、**`pydantic-ai`** 等。这些依赖分别对应不同的 AI 开发框架。如果您使用某个框架进行 Agent 开发，需要安装对应的集成依赖。
+
+安装可选依赖时，在包名后用方括号指定依赖项名称，多个依赖项之间用逗号分隔。例如，如果您需要使用 AgentScope 框架，同时需要浏览器沙箱和 MCP 工具支持，可以执行：
+
+```bash
+pip install agentrun-sdk[playwright,mcp,agentscope]
+```
+
+对于使用 LangChain 框架并需要 HTTP 服务器功能的场景：
+
+```bash
+pip install agentrun-sdk[server,langchain]
+```
+
+如果您不确定需要哪些依赖，可以先安装基础版本，在遇到功能缺失时再按需补充安装。
+:::
+
+</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+
+```bash npm2yarn
+npm install @agentrun/sdk
+```
+
+:::info 配置镜像
+
+可以通过配置 NPM 镜像，更快地安装依赖
+
+```bash npm2yarn
+npm install @agentrun/sdk --registry=https://registry.npmmirror.com
+```
+
+:::
+
+</TabItem></Tabs>
+
+基础安装包含了 SDK 的核心功能，包括 Agent Runtime 管理、模型调用、凭证管理等基础能力。对于大多数简单场景，基础安装已经足够使用。
+
+## 全局参数配置
+
+安装完成后，您需要进行一些基本配置才能使用 SDK。AgentRun SDK 支持多种配置方式，包括环境变量、代码配置和配置文件，您可以根据实际场景选择合适的方式。
+
+<PartialEnv />
+
+## 验证安装
+
+完成安装和配置后，建议运行一个简单的测试脚本来验证 SDK 是否正常工作。创建一个 Python 文件并输入以下代码：
+
+<Tabs groupId="language" queryString><TabItem value="python" label="Python" attributes={{ className: 'python-icon' }}>
+
+```python
+from agentrun.agent_runtime import AgentRuntime
+
+# 列出所有 Agent Runtime
+runtimes = AgentRuntime.list()
+print(f"找到 {len(runtimes)} 个 Agent Runtime")
+```
+
+</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+
+```js
+import AgentRuntime from '@agentrun/sdk';
+
+// 列出所有 Agent Runtime
+const runtimes = AgentRuntime.list();
+console.log(`找到 ${runtimes.length} 个 Agent Runtime`);
+```
+
+</TabItem></Tabs>
+
+执行这个脚本，如果能成功输出而没有报错，说明 SDK 已正确安装并配置。如果遇到认证错误，请检查您的 Access Key 配置是否正确；如果遇到网络错误，请检查您的网络连接和防火墙设置。
+
+完成所有验证后，您就可以开始使用 AgentRun SDK 开发 Agent 应用了。
