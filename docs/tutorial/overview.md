@@ -8,7 +8,7 @@ sidebar_position: 0
 
 AgentRun 是以高代码为核心，开放生态、灵活组装的一站式 Agentic AI 基础设施平台，为企业级 Agentic 应用提供开发、部署与运维全生命周期管理。平台基于 Serverless 架构提供强隔离的运行时与沙箱环境，深度集成开源生态，为用户提供模型高可用和数据不出域能力。
 
-AgentRun Python SDK 是平台的官方客户端库，提供了完整的 Python API 来管理和调用 AgentRun 服务。通过这个 SDK，开发者可以在本地开发环境中编写、测试 Agent 应用，并无缝部署到云端运行。
+AgentRun SDK 是平台的官方客户端库，提供了完整的 Python/NodeJS API 来管理和调用 AgentRun 服务。通过这个 SDK，开发者可以在本地开发环境中编写、测试 Agent 应用，并无缝部署到云端运行。
 
 <img src="https://img.alicdn.com/imgextra/i1/O1CN01J7XpwI26ehfoQ0mF8_!!6000000007687-2-tps-4016-2216.png" />
 

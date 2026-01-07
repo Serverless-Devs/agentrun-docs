@@ -1,0 +1,20 @@
+AgentRun SDK 采用模块化设计，将不同的功能特性作为可选依赖项提供。这样可以避免安装不必要的依赖包，减小环境体积。根据您的实际需求，可以选择安装以下可选依赖：
+
+- **`server`**: 依赖用于启用 HTTP 服务器功能。如果您需要使用 AgentRunServer 将 Agent 封装为 HTTP API，需要安装此依赖。该依赖包含 FastAPI 和 Uvicorn 等 Web 框架组件。
+- **`playwright`**: 依赖用于支持浏览器沙箱功能。当您需要让 Agent 进行网页自动化操作时，需要安装此依赖。安装后还需要运行 Playwright 的初始化命令来下载浏览器驱动。
+- **`mcp`**: 依赖用于支持 MCP（Model Context Protocol）工具集。如果您的 Agent 需要调用基于 MCP 协议的工具服务，需要安装此依赖。
+- 框架集成依赖: 包括 **`langchain`**、**`agentscope`**、**`google-adk`**、**`crewai`**、**`pydantic-ai`** 等。这些依赖分别对应不同的 AI 开发框架。如果您使用某个框架进行 Agent 开发，需要安装对应的集成依赖。
+
+安装可选依赖时，在包名后用方括号指定依赖项名称，多个依赖项之间用逗号分隔。例如，如果您需要使用 AgentScope 框架，同时需要浏览器沙箱和 MCP 工具支持，可以执行：
+
+```bash
+pip install agentrun-sdk[playwright,mcp,agentscope]
+```
+
+对于使用 LangChain 框架并需要 HTTP 服务器功能的场景：
+
+```bash
+pip install agentrun-sdk[server,langchain]
+```
+
+如果您不确定需要哪些依赖，可以先安装基础版本，在遇到功能缺失时再按需补充安装。

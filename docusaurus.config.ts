@@ -100,6 +100,13 @@ const config: Config = {
         // },
 
         {
+          href: 'https://functionai.console.aliyun.com/cn-hangzhou/agent/explore',
+          label: 'AgentRun 控制台',
+          position: 'right',
+          // className: 'header-github-link',
+        },
+
+        {
           href: 'https://github.com/Serverless-Devs/agentrun-sdk-python',
           label: 'Python SDK',
           position: 'right',

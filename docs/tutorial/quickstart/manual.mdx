@@ -8,10 +8,14 @@ import PartModel from '@site/docs/_partial/_create_model_service.mdx';
 import PartSandbox from '@site/docs/_partial/_create_sandbox_browser.mdx';
 import PartInstallS from '@site/docs/_partial/_install_s.mdx';
 import PartRole from '@site/docs/_partial/_role.mdx';
+import PartPipDeps from '@site/docs/_partial/_pip_optional_dependencies.mdx';
 
 # 从零创建 Agent
 
 本教程是一个端到端的实践指南，将引导您手动创建并部署一个完整的 Agent 应用。
+
+完成该实践后，您将获得一个拥有 **主动搜索能力** 的 Agent，能够根据实际情况在 **浏览器沙箱中** 使用 js 脚本预处理内容 **降低 token 消耗**。
+稍加改造便可成为您的 “舆情分析专家”、“新知识学习小帮手”。
 
 ## 准备工作
 
@@ -98,8 +102,6 @@ node -v
 
 </TabItem></Tabs>
 
-至此，您已经配置好了开发环境
-
 ### 依赖安装
 
 为了后续的代码可以正确执行，我们需要进行依赖安装
@@ -114,6 +116,8 @@ agentrun-sdk[server,langchain]==0.0.9
 
 :::note
 由于是基于 langchain 完成代码开发，并且会使用 AgentRun Server 启动 http server，因此增加了可选依赖的安装
+
+<PartPipDeps />
 :::
 
 :::warning
@@ -674,7 +678,6 @@ Health: http://127.0.0.1:${PORT}/health
 });
 ```
 
-
 写入上述文件后，您的目录应该为如下形式
 
 ```
@@ -869,7 +872,6 @@ data: {"type":"RUN_FINISHED","threadId":"3fcd6aed-bbbb-4cbd-b14c-f43a25f02e27","
 
 </details>
 
-
 :::warning
 Sandbox 的生命周期与业务密切相关，因此我们未对 Sandbox 的生命周期进行管理。
 
@@ -912,6 +914,7 @@ Sandbox 的生命周期与业务密切相关，因此我们未对 Sandbox 的生
 对于 `s.yaml` 中，存在 `vars.role` 字段，该字段需要填写您的 RAM 角色，用来获取执行期间的临时阿里云 ACCESS_KEY
 
 快速创建 RAM 角色可以参考:
+
 > <PartRole />
 
 <Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
@@ -963,7 +966,7 @@ resources:
 
         # 环境变量
         environmentVariables:
-            # highlight-next-line
+          # highlight-next-line
           PYTHONPATH: /code/python:/opt/python:/code:/code/python
 
           MODEL_SERVICE: '${vars.model_service}'
@@ -1043,7 +1046,6 @@ resources:
           - name: prod
             version: LATEST
             description: '生产环境端点'
-
 ```
 
 此时，执行 `s build` 则会自动拉取函数计算使用的运行镜像，并在其中安装依赖，依赖会被安装到 `node_modules` 目录。
