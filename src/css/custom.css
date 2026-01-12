@@ -109,28 +109,65 @@
   color: #aaa;
 }
 
-.code-block-error-line {
-  background-color: #ff000020;
-  display: block;
-  margin: 0 calc(-1 * var(--ifm-pre-padding));
-  padding: 0 var(--ifm-pre-padding);
-  border-left: 3px solid #ff000080;
+.highlight-code-block-error-line {
+  --highlight-color: #e1353b;
 }
 
-.code-block-success-line {
-  background-color: #00ff0020;
-  display: block;
-  margin: 0 calc(-1 * var(--ifm-pre-padding));
-  padding: 0 var(--ifm-pre-padding);
-  border-left: 3px solid #00ff0080;
+.highlight-code-block-success-line {
+  --highlight-color: #009202;
 }
 
-.code-block-info-line {
-  background-color: #0000ff20;
+.highlight-code-block-warning-line {
+  --highlight-color: #e6a80b;
+}
+
+.highlight-code-block-info-line {
+  --highlight-color: #52b5d6;
+}
+
+.highlight-code-block-blur-line {
+  --highlight-color: #d4d5d8;
+  background: none !important;
+}
+
+.highlight-code-block-blur-line .token,
+.highlight-code-block-blur-line:hover
+  ~ :not(.highlight-code-block-blur-line)
+  ~ .highlight-code-block-blur-line
+  .token,
+.highlight-code-block-blur-line:has(
+    ~ :not(.highlight-code-block-blur-line)
+      ~ .highlight-code-block-blur-line:hover
+  )
+  .token {
+  opacity: 0.5;
+  filter: blur(2px);
+  transition: all 0.2s ease-in-out;
+}
+
+/* div[class*='codeBlockContent']:hover .highlight-code-block-blur-line .token {
+  opacity: 1;
+  filter: blur(0);
+} */
+
+.highlight-code-block-blur-line:hover .token,
+.highlight-code-block-blur-line:hover ~ .highlight-code-block-blur-line .token,
+.highlight-code-block-blur-line:has(~ .highlight-code-block-blur-line:hover)
+  .token {
+  opacity: 1;
+  filter: blur(0);
+  cursor: pointer;
+}
+
+div[class*='codeBlockContent'] [class*='highlight-code-block'] {
   display: block;
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
-  border-left: 3px solid #0000ff80;
+  padding-left: calc(1em - 3px);
+  border-left-width: 3px;
+  border-left-style: solid;
+  background-color: rgb(from var(--highlight-color) r g b / 0.125);
+  border-left-color: var(--highlight-color);
 }
 
 div[class*='codeBlockContent'] {

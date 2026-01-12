@@ -177,19 +177,29 @@ const config: Config = {
           block: { start: 'highlight-start', end: 'highlight-end' },
         },
         {
-          className: 'code-block-error-line',
+          className: 'highlight-code-block-error-line',
           line: 'error-next-line',
           block: { start: 'error-start', end: 'error-end' },
         },
         {
-          className: 'code-block-success-line',
+          className: 'highlight-code-block-success-line',
           line: 'success-next-line',
           block: { start: 'success-start', end: 'success-end' },
         },
         {
-          className: 'code-block-info-line',
+          className: 'highlight-code-block-info-line',
           line: 'info-next-line',
           block: { start: 'info-start', end: 'info-end' },
+        },
+        {
+          className: 'highlight-code-block-warning-line',
+          line: 'warning-next-line',
+          block: { start: 'warning-start', end: 'warning-end' },
+        },
+        {
+          className: 'highlight-code-block-blur-line',
+          line: 'blur-next-line',
+          block: { start: 'blur-start', end: 'blur-end' },
         },
       ],
     },

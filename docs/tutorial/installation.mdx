@@ -2,8 +2,6 @@
 sidebar_position: 1
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 import PartialEnv from '@site/docs/_partial/_config.mdx';
 import PartPipDeps from '@site/docs/_partial/_pip_optional_dependencies.mdx';
 
@@ -19,7 +17,7 @@ AgentRun Python SDK 要求 Python 版本在 3.10 或更高。建议使用虚拟�
 
 使用包管理器可以快速安装 AgentRun SDK。在终端中执行以下命令即可完成基础安装：
 
-<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+<LangTabs> <PythonTab>
 
 ```bash
 pip install agentrun-sdk
@@ -43,7 +41,7 @@ pip install agentrun-sdk -i http://mirrors.aliyun.com/pypi/simple/
 <PartPipDeps />
 :::
 
-</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+</PythonTab> <NodeJSTab>
 
 ```bash npm2yarn
 npm install @agentrun/sdk
@@ -59,7 +57,7 @@ npm install @agentrun/sdk --registry=https://registry.npmmirror.com
 
 :::
 
-</TabItem></Tabs>
+</NodeJSTab> </LangTabs>
 
 基础安装包含了 SDK 的核心功能，包括 Agent Runtime 管理、模型调用、凭证管理等基础能力。对于大多数简单场景，基础安装已经足够使用。
 
@@ -73,7 +71,7 @@ npm install @agentrun/sdk --registry=https://registry.npmmirror.com
 
 完成安装和配置后，建议运行一个简单的测试脚本来验证 SDK 是否正常工作。创建一个 Python 文件并输入以下代码：
 
-<Tabs groupId="language" queryString><TabItem value="python" label="Python" attributes={{ className: 'python-icon' }}>
+<LangTabs> <PythonTab>
 
 ```python
 from agentrun.agent_runtime import AgentRuntime
@@ -83,7 +81,7 @@ runtimes = AgentRuntime.list()
 print(f"找到 {len(runtimes)} 个 Agent Runtime")
 ```
 
-</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+</PythonTab> <NodeJSTab>
 
 ```js
 import AgentRuntime from '@agentrun/sdk';
@@ -93,8 +91,8 @@ const runtimes = AgentRuntime.list();
 console.log(`找到 ${runtimes.length} 个 Agent Runtime`);
 ```
 
-</TabItem></Tabs>
+</NodeJSTab> </LangTabs>
 
-执行这个脚本，如果能成功输出而没有报错，说明 SDK 已正确安装并配置。如果遇到认证错误，请检查您的 Access Key 配置是否正确；如果遇到网络错误，请检查您的网络连接和防火墙设置。
+执行这个脚本,如果能成功输出而没有报错,说明 SDK 已正确安装并配置。如果遇到认证错误,请检查您的 Access Key 配置是否正确;如果遇到网络错误,请检查您的网络连接和防火墙设置。
 
-完成所有验证后，您就可以开始使用 AgentRun SDK 开发 Agent 应用了。
+完成所有验证后,您就可以开始使用 AgentRun SDK 开发 Agent 应用了。

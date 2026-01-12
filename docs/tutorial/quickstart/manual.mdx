@@ -2,8 +2,6 @@
 sidebar_position: 10
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 import PartModel from '@site/docs/_partial/_create_model_service.mdx';
 import PartSandbox from '@site/docs/_partial/_create_sandbox_browser.mdx';
 import PartInstallS from '@site/docs/_partial/_install_s.mdx';
@@ -25,7 +23,7 @@ import PartPipDeps from '@site/docs/_partial/_pip_optional_dependencies.mdx';
 
 首先，您需要根据不同的语言选择对应的框架，目前 AgentRun 提供了如下 SDK
 
-<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+<LangTabs> <PythonTab>
 
 我们建议您使用 `uv` 进行项目管理（使用 `uv` 需要先安装 [Python](https://www.python.org/downloads/)），参考如下命令进行 `uv` 的安装与升级
 
@@ -88,7 +86,7 @@ uv venv -p 3.10
 uv run python --version
 ```
 
-</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+</PythonTab> <NodeJSTab>
 
 您需要确保您的 [NodeJS](https://nodejs.org/en/download) 版本在 **18.0.0** 及以上
 
@@ -100,13 +98,13 @@ node -v
 
 您也可以使用其他您喜欢的运行时（如 Deno、Bun）进行代码编写
 
-</TabItem></Tabs>
+</NodeJSTab> </LangTabs>
 
 ### 依赖安装
 
 为了后续的代码可以正确执行，我们需要进行依赖安装
 
-<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+<LangTabs> <PythonTab>
 
 在项目目录创建如下文件
 
@@ -134,7 +132,7 @@ uv pip install -r requirements.txt -i http://mirrors.aliyun.com/pypi/simple/
 这里我们使用 `-i http://mirrors.aliyun.com/pypi/simple/` 参数，通过阿里云 PyPI 镜像加速依赖的安装速度
 :::
 
-</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+</PythonTab> <NodeJSTab>
 
 ```json package.json
 {
@@ -176,7 +174,7 @@ npm i --registry=https://registry.npmmirror.com
 这里我们使用 `--registry=https://registry.npmmirror.com` 参数，通过 NPM Mirror 镜像加速依赖的安装速度
 :::
 
-</TabItem></Tabs>
+</NodeJSTab> </LangTabs>
 
 ### 云上资源准备
 
@@ -241,7 +239,7 @@ AGENTRUN_SDK_DEBUG=1
 操作浏览器对大模型的能力存在较高要求，强烈建议您使用 `qwen3-max` 大模型
 :::
 
-<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+<LangTabs> <PythonTab>
 
 ```python [title="main.py"]
 from agentrun import AgentRequest
@@ -321,7 +319,7 @@ my-agentrun-python
 ┗ requirements.txt      # 需要的依赖列表
 ```
 
-</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+</PythonTab> <NodeJSTab>
 
 ```js
 /**
@@ -695,7 +693,7 @@ my-agentrun-python
 我们会尽快完善该部分内容，提升 NodeJS 的开发体验
 :::
 
-</TabItem></Tabs>
+</NodeJSTab> </LangTabs>
 
 ## 本地执行测试
 
@@ -917,7 +915,7 @@ Sandbox 的生命周期与业务密切相关，因此我们未对 Sandbox 的生
 
 > <PartRole />
 
-<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+<LangTabs> <PythonTab>
 
 ```yaml [title="s.yaml"]
 edition: 3.0.0
@@ -985,7 +983,7 @@ resources:
 
 此时，执行 `s build` 则会自动拉取函数计算使用的运行镜像，并在其中安装依赖，依赖会被安装到 `python` 目录（这也意味着，您的代码需要能够识别 python 目录的依赖，这已经通过 `PYTHONPATH` 配置）
 
-</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+</PythonTab> <NodeJSTab>
 
 ```yaml [title="s.yaml"]
 edition: 3.0.0
@@ -1056,7 +1054,7 @@ resources:
 您可以将 `s build` 步骤放在您的发布流水线中执行，避免影响本地的逻辑
 :::
 
-</TabItem></Tabs>
+</NodeJSTab> </LangTabs>
 
 更多 `s build` 的细节，可以参考 [Serverless Devs Build 命令](https://serverless-devs.com/docs/user-guide/aliyun/fc/command/build/)
 
@@ -1064,20 +1062,20 @@ resources:
 
 部署前，我们还需要排除 `.env` 文件和不必要的文件，将代码包压缩至最小
 
-<Tabs groupId="language" queryString><TabItem value="python" label="Python" default attributes={{ className: 'python-icon' }}>
+<LangTabs> <PythonTab default>
 
 ```bash [title=".fcignore"]
 .env
 .venv
 ```
 
-</TabItem><TabItem value="nodejs" label="NodeJS" attributes={{ className: 'nodejs-icon' }}>
+</PythonTab> <NodeJSTab>
 
 ```bash [title=".fcignore"]
 .env
 ```
 
-</TabItem></Tabs>
+</NodeJSTab> </LangTabs>
 
 由于前面我们已经写好了 `s.yaml` 文件，因此您只需要执行部署命令，即可快速将 Agent 部署到 AgentRun 中
 
