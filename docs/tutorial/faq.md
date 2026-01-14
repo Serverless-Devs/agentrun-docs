@@ -96,7 +96,7 @@ agent = await client.create_async(config)
 
 ## 还有问题？
 
-如果以上内容没有解决你的问题，欢迎：
+如果以上内容没有解决您的问题，欢迎：
 
 1. 在 [GitHub Issues](https://github.com/AgentRunDev/agentrun-sdk/issues/new) 提问
 2. 查阅 [阿里云官方文档](https://help.aliyun.com/zh/functioncompute/fc/agentrun)

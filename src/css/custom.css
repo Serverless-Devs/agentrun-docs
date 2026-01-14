@@ -83,6 +83,13 @@
     no-repeat center center;
 }
 
+.markdown > img,
+figure > img {
+  [data-theme='dark'] & {
+    filter: brightness(0.7);
+  }
+}
+
 .img-with-caption {
   display: block;
   text-align: center;
@@ -101,11 +108,11 @@
     color: #666;
     text-align: center;
     opacity: 0.95;
-  }
-}
 
-[data-theme='dark'] .img-with-caption > figcaption.img-alt-text {
-  color: #aaa;
+    [data-theme='dark'] & {
+      color: #aaa;
+    }
+  }
 }
 
 .highlight-code-block-error-line {
@@ -138,6 +145,10 @@
 .highlight-code-block-add-line {
   background-color: #dafae0 !important;
 
+  [data-theme='dark'] & {
+    background-color: #29523c !important;
+  }
+
   &::before {
     content: '+';
   }
@@ -145,6 +156,10 @@
 
 .highlight-code-block-remove-line {
   background-color: #ffeae8 !important;
+
+  [data-theme='dark'] & {
+    background-color: #5c2330 !important;
+  }
 
   &::before {
     content: '-';
