@@ -201,6 +201,16 @@ const config: Config = {
           line: 'blur-next-line',
           block: { start: 'blur-start', end: 'blur-end' },
         },
+        {
+          className: 'highlight-code-block-add-line',
+          line: 'add-next-line',
+          block: { start: 'add-start', end: 'add-end' },
+        },
+        {
+          className: 'highlight-code-block-remove-line',
+          line: 'remove-next-line',
+          block: { start: 'remove-start', end: 'remove-end' },
+        },
       ],
     },
     zoom: {
