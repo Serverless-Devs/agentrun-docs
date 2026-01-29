@@ -171,14 +171,7 @@ figure > img {
   background: none !important;
 }
 
-.highlight-code-block-blur-line,
-.highlight-code-block-blur-line:hover
-  ~ :not(.highlight-code-block-blur-line)
-  ~ .highlight-code-block-blur-line,
-.highlight-code-block-blur-line:has(
-    ~ :not(.highlight-code-block-blur-line)
-      ~ .highlight-code-block-blur-line:hover
-  ) {
+.highlight-code-block-blur-line {
   .token {
     opacity: 0.5;
     filter: blur(2px);
@@ -193,6 +186,21 @@ figure > img {
     opacity: 1;
     filter: blur(0);
     cursor: pointer;
+  }
+}
+
+/* 不能和上面合并，有优先级要求 */
+.highlight-code-block-blur-line:hover
+  ~ :not(.highlight-code-block-blur-line)
+  ~ .highlight-code-block-blur-line,
+.highlight-code-block-blur-line:has(
+  ~ :not(.highlight-code-block-blur-line)
+    ~ .highlight-code-block-blur-line:hover
+) {
+  .token {
+    opacity: 0.5;
+    filter: blur(2px);
+    transition: all 0.2s ease-in-out;
   }
 }
 
