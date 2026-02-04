@@ -1,0 +1,456 @@
+---
+sidebar_position: 100
+---
+
+import PartialEnv from '@site/docs/_partial/_config.mdx';
+import PartModel from '@site/docs/_partial/_create_model_service.mdx';
+import PartSandbox from '@site/docs/_partial/_create_sandbox_browser.mdx';
+import PartToolset from '@site/docs/_partial/_create_toolset_time_mcp.mdx';
+
+# Mastra 集成
+
+> **摘要**: 本文将展示如何通过 2 行代码，将强大的 Agent 基础设施平台 AgentRun 与流行的 Agent 编排框架 Mastra 结合。让 Mastra 继续负责上层工作流，而 AgentRun 提供模型、沙箱和工具集等底层能力，实现"1+1 > 2"的效果。
+
+## 核心痛点：Agent 开发的"最后一公里"
+
+在构建 Agent 应用时，开发者常常在解决了核心的编排逻辑后，遇到一系列棘手的工程问题：
+
+- 模型供应商锁定：切换不同的大模型（如从 OpenAI 到 Qwen）意味着需要重写 SDK 调用、适配鉴权和参数，成本高昂。
+- 基础设施重复造轮子：代码沙箱（Sandbox）、工具集（ToolSet）等关键组件，都需要大量时间和精力自行搭建和维护。
+- 技术栈整合难题：如果你的项目已经采用了 Mastra 这样的编排框架，如何优雅地接入一个更全面、更专业的 Agent 基础设施平台，而不是推倒重来？
+
+本文为你提供一个简洁高效的解决方案。
+
+## 强强联合：Mastra 作大脑，AgentRun 作基座
+
+要理解这个方案的优势，我们首先需要明确两个平台的定位：
+
+- Mastra：Agent 的"大脑"与"指挥官"
+  它专注于 Agent 编排、工作流定义和多 Agent 协作。你可以用它设计复杂的任务流，决定 Agent 应该在何时、以何种顺序调用哪些能力。
+- AgentRun：Agent 的"能力底座"与"能源中心"
+
+作为阿里云的 Agent 基础设施平台，它提供 Agent 运行所需的一切底层能力：
+
+- 统一模型层：通过统一的 API 访问和切换多种模型（通义千问、OpenAI 等）
+- 安全沙箱：隔离执行代码、访问文件等高风险操作（支持代码解释器和浏览器自动化）
+- 工具集管理：统一管理和调用各种外部工具（OpenAPI、MCP 协议）
+- 观测与治理：日志、监控、审计等企业级能力
+
+因此，最佳实践是将两者结合：
+
+- Mastra (编排层) + AgentRun (能力层) = 高效、可扩展的 Agent 应用
+- Mastra 负责"做什么"和"怎么做"，AgentRun 负责提供完成任务所需的"工具"和"动力"。
+
+## 准备工作：安装与配置
+
+安装 SDK
+在你的 Node.js/TypeScript 项目中执行：
+
+```bash npm2yarn
+npm install @agentrun/sdk @mastra/core --registry=https://registry.npmmirror.com
+```
+
+<PartialEnv />
+
+### 配置模型服务
+
+<PartModel />
+
+### 配置浏览器沙箱
+
+<PartSandbox />
+
+### 配置时间获取 MCP 工具
+
+<PartToolset />
+
+## 核心改动：2 行代码接入 AgentRun 资源
+
+现在，我们进入最关键的环节。你只需在 Mastra 的 Agent 初始化逻辑中，引入 AgentRun 的模型即可。
+
+这正是那核心的 2 行代码：
+
+```typescript
+import { model } from '@agentrun/sdk/integration/mastra'; // 1. 引入 AgentRun SDK
+
+const llm = await model({ name: 'my-agentrun-model' }); // 2. 创建指向 AgentRun 模型的实例
+
+// info-start
+// 1. 引入 AgentRun SDK
+import { model } from '@agentrun/sdk/integration/mastra';
+// info-end
+
+async function createDemoAgent() {
+  const mastraAgent = new Agent({
+    id: 'run_agent',
+    name: 'AgentRun',
+    instructions: `
+  你是一个智能助手，你会帮助用户完成各种任务。你的输出，必须是返向输出的。
+
+  如，用户输入 “你好”，应该输出 “？么的您助帮以可么什有，好您”
+    `.trim(),
+    // info-start
+    // 2. 将 AgentRun 的模型转换为 Mastra 可以识别的模型
+    model: await model({ name: 'my-agentrun-model' }),
+    // info-end
+  });
+
+  return mastraAgent;
+}
+```
+
+当然，工具、沙箱等资源也可以一键接入
+
+```typescript
+// info-start
+// 1. 引入 AgentRun SDK
+import { model, sandbox, toolset } from '@agentrun/sdk/integration/mastra';
+// info-end
+
+async function createDemoAgent() {
+  const mastraAgent = new Agent({
+    id: 'run_agent',
+    name: 'AgentRun',
+    instructions: `
+  你是一个智能助手，你会帮助用户完成各种任务。你的输出，必须是返向输出的。
+
+  如，用户输入 “你好”，应该输出 “？么的您助帮以可么什有，好您”
+    `.trim(),
+    model: await model({ name: 'my-agentrun-model' }),
+    // info-start
+    // 2. 将 AgentRun 的工具转换为 Mastra 可以识别的模型
+    tools: async () => {
+      const sandboxTools = await sandbox({
+        templateName: 'my-agentrun-browser',
+      });
+      const toolsetTools = await toolset({ name: 'my-agentrun-time-mcp' });
+      const allTools = { ...sandboxTools, ...allTools };
+      return allTools;
+    },
+    // info-end
+  });
+
+  return mastraAgent;
+}
+```
+
+:::note 遇到了一些问题？
+
+在这里，有一些常见的问题需要您注意
+
+1. 如果您使用 Bun 作为运行时，那么 Playwright 可能会超时，相关 Issue 见 [Playwright connectOverCDP() not working](https://github.com/oven-sh/bun/issues/9911)
+2. 您需要自行安装 Playwright 依赖，为了避免引入过大的依赖项，AgentRun SDK 不会为您自动安装 Playwright
+3. 如果相较于 Playwright，您更偏好于 Puppeteer 或 Selenium，您也可以使用沙箱的 `sandbox.getCdpUrl();` 获取 CDP 端点地址，通过 Puppeteer 或 Selenium 进行连接
+4. AgentRun SDK 封装了一些常用的操作，但这也导致沙箱的生命周期无法被您管控，如果您的业务需要精细化控制沙箱，建议您自行维护沙箱工具
+5. 如果您要使用 Mastra 的 Dev Server，那么 Mastra 实例需要是同步声明的（需要被 `export`），Mastra Agent 也应该是同步声明的，因此模型也需要被同步声明。  
+   但访问 AgentRun 是一个异步的网络请求行为，因此无法直接在同步上下文中调用 `await model(...)`。
+
+   要解决该问题，您可以使用 `model: ()=>model(...)` 的方式初始化模型，这样可以在 Agent 被调用时才真正初始化模型。但这会导致每个请求都会 `GetModelService`，可能会导致 **流控**。  
+   因此，建议您将产生的模型实例进行缓存，避免不必要的开销。
+
+   ```typescript
+   // info-start
+   // 缓存大模型实例化的结果
+   let llm = null
+   // info-end
+
+   export const mastraAgent = new Agent({
+     id: 'run_agent',
+     name: 'AgentRun',
+     instructions: `
+   你是一个智能助手，你会帮助用户完成各种任务。你的输出，必须是返向输出的。
+
+   如，用户输入 “你好”，应该输出 “？么的您助帮以可么什有，好您”
+     `.trim(),
+     // info-start
+     // 仅在未初始化的情况下获取大模型
+     model: async ()=> {
+       if (llm) return llm
+
+       // 此时，您也可以根据不同的请求上下文，使用不同的模型
+       llm = await model({ name: 'my-agentrun-model' }),
+       return llm
+     }
+     // info-end
+   });
+   ```
+
+:::
+
+您可以询问大模型今天是几号，也可以要求他打开某个页面，访问其中的内容
+
+```bash wordwrap
+data: {"type":"RUN_STARTED","threadId":"2c7b5272-f2b5-401e-a6a4-f62c6b8f44bb","runId":"a7760759-49ba-41c5-9bd2-247902b7dfc3"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_df2498ad5d43415a8d3ad0e9","toolCallName":"start-mcp-time-ggda_get_current_time"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_df2498ad5d43415a8d3ad0e9","delta":"{}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_df2498ad5d43415a8d3ad0e9"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_df2498ad5d43415a8d3ad0e9","toolCallId":"call_df2498ad5d43415a8d3ad0e9","content":"{\"error\":true,\"message\":\"Tool input validation failed for start-mcp-time-ggda_get_current_time. Please fix the following errors and try again:\\n- timezone: Invalid input: expected string, received undefined\\n\\nProvided arguments: {}\",\"validationErrors\":{\"_errors\":[],\"timezone\":{\"_errors\":[\"Invalid input: expected string, received undefined\"]}}}","role":"tool"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_5a1238ab6aff48658b28d7e4","toolCallName":"start-mcp-time-ggda_get_current_time"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_5a1238ab6aff48658b28d7e4","delta":"{\"timezone\":\"UTC\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_5a1238ab6aff48658b28d7e4"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"tool-result-call_5a1238ab6aff48658b28d7e4","toolCallId":"call_5a1238ab6aff48658b28d7e4","content":"[{\"type\":\"text\",\"text\":\"{\\n  \\\"timezone\\\": \\\"UTC\\\",\\n  \\\"datetime\\\": \\\"2026-01-30T10:13:25+00:00\\\",\\n  \\\"is_dst\\\": false\\n}\"}]","role":"tool"}
+
+data: {"type":"TEXT_MESSAGE_START","messageId":"2f5a07f6-d65c-4a33-b62c-610053fd8091","role":"assistant"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"2f5a07f6-d65c-4a33-b62c-610053fd8091","delta":"。"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"2f5a07f6-d65c-4a33-b62c-610053fd8091","delta":"时"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"2f5a07f6-d65c-4a33-b62c-610053fd8091","delta":"区"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"2f5a07f6-d65c-4a33-b62c-610053fd8091","delta":" UTC"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"2f5a07f6-d65c-4a33-b62c-610053fd8091","delta":" 在 20"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"2f5a07f6-d65c-4a33-b62c-610053fd8091","delta":"26 年 1"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"2f5a07f6-d65c-4a33-b62c-610053fd8091","delta":" 月 30 日"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"2f5a07f6-d65c-4a33-b62c-610053fd8091","delta":"，现在是"}
+
+data: {"type":"TEXT_MESSAGE_END","messageId":"2f5a07f6-d65c-4a33-b62c-610053fd8091"}
+
+data: {"type":"RUN_FINISHED","threadId":"2c7b5272-f2b5-401e-a6a4-f62c6b8f44bb","runId":"a7760759-49ba-41c5-9bd2-247902b7dfc3"}
+```
+
+## 客户端调用方式
+
+AgentRun 提供了两种调用方式
+
+- **OpenAI Chat Completions 兼容协议**: 使用场景广泛，可以快速接入到 Open WebUI、Cherry Studio 等各种场景，方便以大模型的方式调用您的 Agent
+- **AG-UI 协议**: 开源的 Agent 交互规范，适合与前端页面交互时用于内容渲染，可以流式展示工具调用的细节
+
+通过 AgentRun Server，你可以快速将 Agent 与这两种协议进行对接。
+
+```typescript
+async function* invokeAgent(
+  request: AgentRequest,
+): AsyncGenerator<AgentEventItem> {
+  // info-start
+  // AgentRunServer 本身并非和 Mastra 绑定，您可以通过自己转换的方式，与任何 Agent 框架进行集成
+  // 通过 Mastra 集成提供的 MastraConverter，可以方便地将 Mastra 的流式输出转换为 AgentRun 事件流
+  const converter = new MastraConverter();
+  // info-end
+  const mastraStream = await mastraAgent.stream(
+    request.messages.map(
+      (msg) =>
+        ({
+          role: msg.role,
+          content: msg.content || '',
+        }) as any,
+    ),
+  );
+  for await (const chunk of mastraStream.fullStream) {
+    const events = converter.convert(chunk);
+
+    for (const event of events) {
+      // info-start
+      // 这里返回的内容完全由您控制，您可以实现一个 “大模型” 做内容反转，但实现上可能只是一行 reverse 代码
+      yield event;
+      // info-end
+    }
+  }
+}
+
+const server = new AgentRunServer({
+  invokeAgent,
+  config: { corsOrigins: ['*'] },
+});
+
+server.start({ port: 9000 });
+```
+
+`AgentRunServer` 会在 9000 端口启动 http 服务，您可以通过如下代码进行调用，也可以在不同的语言中，安装 OpenAI、AG-UI 的 SDK 进行调用
+
+<Tabs>
+
+<TabItem value="openai" label="OpenAI Chat Completions 非流式" default>
+
+```bash wordwrap
+# highlight-next-line
+curl http://127.0.0.1:9000/openai/v1/chat/completions \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {
+        "role": "user",
+        "content": "天空为什么是蓝的？"
+      }
+    ],
+    # highlight-next-line
+    "stream": false
+  }'
+
+# blur-next-line
+{"id":"chatcmpl-1769763445398-g67ex5l","object":"chat.completion","created":1769763445,"model":"agentrun","choices":[{"index":0,"message":{"role":"assistant","content":"？的蓝是么什为天"},"finish_reason":"stop"}],"usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0}}
+```
+
+</TabItem>
+
+<TabItem value="openai_stream" label="OpenAI Chat Completions 流式" default>
+
+```bash wordwrap
+# highlight-next-line
+curl http://127.0.0.1:9000/openai/v1/chat/completions \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {
+        "role": "user",
+        "content": "天空为什么是蓝的？"
+      }
+    ],
+    # highlight-next-line
+    "stream": true
+  }'
+
+# blur-start
+data: {"id":"chatcmpl-1769763283836-g5t0p3m","object":"chat.completion.chunk","created":1769763283,"model":"agentrun","choices":[{"index":0,"delta":{"role":"assistant","content":"？"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-1769763283836-g5t0p3m","object":"chat.completion.chunk","created":1769763283,"model":"agentrun","choices":[{"index":0,"delta":{"content":"的"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-1769763283836-g5t0p3m","object":"chat.completion.chunk","created":1769763283,"model":"agentrun","choices":[{"index":0,"delta":{"content":"蓝"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-1769763283836-g5t0p3m","object":"chat.completion.chunk","created":1769763283,"model":"agentrun","choices":[{"index":0,"delta":{"content":"是"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-1769763283836-g5t0p3m","object":"chat.completion.chunk","created":1769763283,"model":"agentrun","choices":[{"index":0,"delta":{"content":"么什为天"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-1769763283836-g5t0p3m","object":"chat.completion.chunk","created":1769763283,"model":"agentrun","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+data: [DONE]
+# blur-end
+```
+
+</TabItem>
+
+<TabItem value="agui" label="AG-UI" default>
+
+```bash wordwrap
+# highlight-next-line
+curl http://127.0.0.1:9000/ag-ui/agent \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {
+        "role": "user",
+        "content": "天空为什么是蓝的？"
+      }
+    ]
+  }'
+
+# blur-start
+data: {"type":"RUN_STARTED","threadId":"35884228-0bbc-46d1-b476-5665bfb4fb9d","runId":"43d67a14-95e4-4e36-9f0f-9892362d2661"}
+
+data: {"type":"TEXT_MESSAGE_START","messageId":"be7300f5-15c0-4fee-b007-aa25a07df54d","role":"assistant"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"be7300f5-15c0-4fee-b007-aa25a07df54d","delta":"？"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"be7300f5-15c0-4fee-b007-aa25a07df54d","delta":"么"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"be7300f5-15c0-4fee-b007-aa25a07df54d","delta":"的您"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"be7300f5-15c0-4fee-b007-aa25a07df54d","delta":"助帮以"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"be7300f5-15c0-4fee-b007-aa25a07df54d","delta":"可么什有，好"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"be7300f5-15c0-4fee-b007-aa25a07df54d","delta":"您"}
+
+data: {"type":"TEXT_MESSAGE_END","messageId":"be7300f5-15c0-4fee-b007-aa25a07df54d"}
+
+data: {"type":"RUN_FINISHED","threadId":"35884228-0bbc-46d1-b476-5665bfb4fb9d","runId":"43d67a14-95e4-4e36-9f0f-9892362d2661"}
+# blur-end
+```
+
+</TabItem>
+
+</Tabs>
+
+当然，如果您希望使用 Mastra 官方的 Server，则完全可以不使用 `AgentRunServer`，按照您的场景启动服务即可。
+
+## 完整的代码
+
+```typescript
+import { Agent } from '@mastra/core/agent';
+import { AgentRunServer, type AgentRequest } from '@agentrun/sdk/server';
+import {
+  MastraConverter,
+  type AgentEventItem,
+  model,
+  toolset,
+  sandbox,
+} from '@agentrun/sdk/integration/mastra';
+
+const mastraAgent = new Agent({
+  id: 'run_agent',
+  name: 'AgentRun',
+  instructions: `
+你是一个智能助手，你会帮助用户完成各种任务。你的输出后，必须是返向输出的。
+
+如，用户输入 “你好”，应该输出 “？么的您助帮以可么什有，好您”
+  `.trim(),
+  model: () => model({ name: 'ohyee-test' }),
+  tools: async () => {
+    const sandboxTools = await sandbox({ templateName: 'my-agentrun-browser' });
+    const toolsetTools = await toolset({ name: 'my-agentrun-time-mcp' });
+    const allTools = { ...sandboxTools, ...allTools };
+    return allTools;
+  },
+});
+
+async function* invokeAgent(
+  request: AgentRequest,
+): AsyncGenerator<AgentEventItem> {
+  const converter = new MastraConverter();
+  const mastraStream = await mastraAgent.stream(
+    request.messages.map(
+      (msg) =>
+        ({
+          role: msg.role,
+          content: msg.content || '',
+        }) as any,
+    ),
+  );
+  for await (const chunk of mastraStream.fullStream) {
+    const events = converter.convert(chunk);
+
+    for (const event of events) {
+      yield event;
+    }
+  }
+}
+
+const server = new AgentRunServer({
+  invokeAgent,
+  config: { corsOrigins: ['*'] },
+});
+
+console.log(`
+curl http://127.0.0.1:9000/openai/v1/chat/completions -X POST \\
+  -H "Content-Type: application/json" \\
+  -d \'{"messages": [{"role": "user", "content": "天空为什么是蓝的？"}], "stream": true}\'
+
+curl http://127.0.0.1:9000/ag-ui/agent -X POST \\
+  -H "Content-Type: application/json" \\
+  -d \'{"messages": [{"role": "user", "content": "天空为什么是蓝的？"}]}\'
+  `);
+
+server.start({ port: 9001 });
+```
+
+## 下一步工作
+
+到此为止，您已经成功将 Mastra 与 AgentRun 结合，打造了一个功能强大的 Agent 应用。接下来，您可以：
+- 深入了解 AgentRun 的更多功能，如 记忆、知识库
+- 将您的 Agent 部署到 AgentRun 云平台，享受企业级的运维和治理能力
+- 在 AgentRun 部署您的私有大模型，实现更高的数据安全和定制化需求

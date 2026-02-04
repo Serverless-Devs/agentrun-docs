@@ -235,3 +235,7 @@ div[class*='codeBlockContent'] {
 .split4 > * {
   flex: 1 1 25%;
 }
+
+.wrap {
+  white-space: pre-wrap;
+}
