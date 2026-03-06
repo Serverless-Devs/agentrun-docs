@@ -1,0 +1,42 @@
+# Serverless Devs 配置 - 证书自动更新函数（FC 3.0）
+edition: 3.0.0
+name: cert-auto-renew
+access: default
+
+vars:
+  region: cn-hongkong
+  bucket: agentrun-docs
+  email: admin@agent.run
+  role: acs:ram::${config('AccountID')}:role/docs.agent.run-cert
+
+resources:
+  certRenew:
+    actions:
+      pre-deploy:
+        - run: npm run build
+    component: fc3
+    props:
+      region: ${vars.region}
+      functionName: docs-agent-run-cert-auto-renew
+      runtime: nodejs20
+      handler: dist/index.handler
+      memorySize: 512
+      timeout: 300
+      code: .
+      description: Let's Encrypt 证书自动申请并通过 PutCname 绑定至 OSS 自定义域名
+      internetAccess: true
+      role: ${vars.role}
+      logConfig: auto
+      environmentVariables:
+        CERT_DOMAIN: docs.agent.run
+        CERT_OSS_BUCKET: ${vars.bucket}
+        CERT_OSS_REGION: oss-${vars.region}
+        ACME_ACCOUNT_EMAIL: ${vars.email}
+      triggers:
+        - triggerName: monthly
+          triggerType: timer
+          qualifier: LATEST
+          triggerConfig:
+            cronExpression: 'CRON_TZ=Asia/Shanghai 0 0 0 1 * *'
+            enable: true
+            payload: 'cert-renew'

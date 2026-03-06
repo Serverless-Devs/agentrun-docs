@@ -1,0 +1,13 @@
+src/
+.env
+.env.*
+*.ts
+tsconfig.json
+vite.config.ts
+s.yaml
+.gitignore
+.fcignore
+README.md
+Makefile
+*.log
+*.md
